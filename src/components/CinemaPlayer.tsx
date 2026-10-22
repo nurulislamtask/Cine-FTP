@@ -285,20 +285,24 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       return '';
     }
 
-    // Direct stream (Step 0) is the primary and fastest native route
-    if (streamFallbackStep === 0) {
+    // On HTTPS sites (Vercel), never try HTTP direct streams — browsers block mixed content.
+    // Go straight to proxy route for any non-HTTPS URL.
+    const isHttpOnHttps = isHttpsOrigin && safePlayableUrl.startsWith('http://') && !safePlayableUrl.startsWith('https://');
+
+    // Direct stream (Step 0) is the primary and fastest native route — only for HTTPS URLs or non-HTTPS origins
+    if (streamFallbackStep === 0 && !isHttpOnHttps) {
       return safePlayableUrl;
     }
 
     // Step 1: Direct Alternate Mirror cluster (e.g. server3 instead of server2) or Proxy
     if (streamFallbackStep === 1) {
-      if (alternateMirrorUrl) return alternateMirrorUrl;
+      if (alternateMirrorUrl && !(isHttpsOrigin && alternateMirrorUrl.startsWith('http://'))) return alternateMirrorUrl;
       return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
     }
 
-    // Step 2: Proxy route (handles CORS and range requests)
+    // Step 2: Proxy route (handles CORS and range requests) — always safe for HTTPS sites
     return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
-  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl]);
+  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
 
   const fallbackAttemptsRef = useRef(0);
 
