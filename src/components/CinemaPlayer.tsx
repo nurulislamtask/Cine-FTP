@@ -53,6 +53,29 @@ interface CinemaPlayerProps {
 
 type AspectMode = 'contain' | 'cover' | 'fill' | '21:9';
 
+function parseRuntimeToSeconds(runtime?: string): number {
+  if (!runtime) return 0;
+  const clean = runtime.trim().toLowerCase();
+
+  // Match "2h 21m", "2h", "1h 45m", "2 hr 21 min", "2 hrs"
+  const hMatch = clean.match(/(\d+)\s*(?:h|hr|hours?)/);
+  const mMatch = clean.match(/(\d+)\s*(?:m|min|minutes?)/);
+  if (hMatch || mMatch) {
+    const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+    const minutes = mMatch ? parseInt(mMatch[1], 10) : 0;
+    return hours * 3600 + minutes * 60;
+  }
+
+  // Match "120 min", "120 mins", or plain numbers
+  const minOnly = clean.match(/^(\d+)\s*(?:min|mins|minutes)?$/);
+  if (minOnly) {
+    const val = parseInt(minOnly[1], 10);
+    if (val > 0) return val * 60;
+  }
+
+  return 0;
+}
+
 export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
   video,
   playlist,
@@ -285,33 +308,70 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       return '';
     }
 
-    // On HTTPS sites (Vercel), never try HTTP direct streams — browsers block mixed content.
-    // Go straight to proxy route for any non-HTTPS URL.
     const isHttpOnHttps = isHttpsOrigin && safePlayableUrl.startsWith('http://') && !safePlayableUrl.startsWith('https://');
 
-    // Direct stream (Step 0) is the primary and fastest native route — only for HTTPS URLs or non-HTTPS origins
+    // Step 0: Direct stream (fastest native route)
     if (streamFallbackStep === 0 && !isHttpOnHttps) {
       return safePlayableUrl;
     }
 
-    // Step 1: High-Speed HTTP Range Proxy (handles CORS, Range 206, and server-side connection)
-    return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
-  }, [safePlayableUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
+    // Step 1: High-Speed Range Proxy for primary server
+    if (streamFallbackStep === 1 || isHttpOnHttps) {
+      return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
+    }
+
+    // Step 2: Alternate Mirror Direct (if available)
+    if (streamFallbackStep === 2 && alternateMirrorUrl) {
+      if (!isHttpsOrigin || alternateMirrorUrl.startsWith('https://')) {
+        return alternateMirrorUrl;
+      }
+      return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
+    }
+
+    // Step 3: Alternate Mirror Proxy
+    if (streamFallbackStep === 3 && alternateMirrorUrl) {
+      return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
+    }
+
+    // Step 4: Transcode / Remux stream
+    return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
+  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin, selectedAudioTrack]);
 
   const fallbackAttemptsRef = useRef(0);
 
-  // Toggle between direct stream and proxy route smoothly
+  // Toggle between direct stream, proxy route, and mirror smoothly
   const advanceStreamFallback = useCallback(() => {
-    setStreamFallbackStep((prev) => (prev === 0 ? 1 : 0));
+    setStreamFallbackStep((prev) => {
+      const maxSteps = alternateMirrorUrl ? 4 : 2;
+      return (prev + 1) % (maxSteps + 1);
+    });
     setIsBuffering(true);
-  }, []);
+  }, [alternateMirrorUrl]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
-    window.setTimeout(() => setToastMessage(null), 3000);
+    window.setTimeout(() => setToastMessage(null), 3500);
   }, []);
+
+  // Fast failover watchdog: If direct stream hangs with readyState === 0 after 4s, auto-advance to proxy!
+  useEffect(() => {
+    if (!isPlaying && !isBuffering) return;
+    if (streamLoadFailed || !streamUrl) return;
+
+    const timer = window.setTimeout(() => {
+      const v = videoRef.current;
+      if (v && v.readyState === 0 && isBuffering && streamFallbackStep === 0) {
+        console.warn('Direct stream connection slow/unreachable, advancing to proxy...');
+        advanceStreamFallback();
+        showToast('Connecting via high-speed stream proxy...');
+      }
+    }, 4000);
+
+    return () => window.clearTimeout(timer);
+  }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, advanceStreamFallback, showToast]);
+
 
   // Autoplay handler with audio policy fallback
   useEffect(() => {
@@ -424,7 +484,8 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     }
   }, [activeSubId, subOffset, subtitles, video.url, overrideVideoUrl, customSubs]);
 
-  const effectiveDuration = Math.max(duration, probedDuration, 0);
+  const runtimeSeconds = useMemo(() => parseRuntimeToSeconds(video.runtime), [video.runtime]);
+  const effectiveDuration = Math.max(duration, probedDuration, runtimeSeconds, 0);
   const displayedTime = isScrubbing ? scrubTime : currentTime;
 
   // Auto-hide controls after 3.5 seconds of inactivity while playing
@@ -765,11 +826,22 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
             }
           }}
           onError={() => {
-            if (fallbackAttemptsRef.current < 2) {
+            const maxAttempts = alternateMirrorUrl ? 4 : 3;
+            if (fallbackAttemptsRef.current < maxAttempts) {
               fallbackAttemptsRef.current += 1;
               const cur = videoRef.current?.currentTime || currentTime;
               advanceStreamFallback();
               setStreamLoadFailed(false);
+              const nextStep = (streamFallbackStep + 1) % (maxAttempts + 1);
+              const stepName =
+                nextStep === 1
+                  ? 'Switching to Stream Proxy...'
+                  : nextStep === 2
+                  ? 'Trying backup mirror stream...'
+                  : nextStep === 3
+                  ? 'Trying backup proxy stream...'
+                  : 'Retrying stream connection...';
+              showToast(stepName);
               window.setTimeout(() => {
                 if (videoRef.current && cur > 0) {
                   try {
@@ -833,7 +905,15 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
             <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
-              {streamFallbackStep === 0 ? 'Loading direct stream...' : 'Loading proxy stream...'}
+              {streamFallbackStep === 0
+                ? 'Connecting direct stream...'
+                : streamFallbackStep === 1
+                ? 'Loading proxy stream...'
+                : streamFallbackStep === 2
+                ? 'Connecting backup mirror...'
+                : streamFallbackStep === 3
+                ? 'Loading backup proxy...'
+                : 'Remuxing video stream...'}
             </span>
           </div>
         )}
@@ -845,20 +925,26 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
               <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
                 <AlertTriangle className="w-6 h-6" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Playback Error
+                  Playback Connection Error
                 </h3>
                 <p className="text-xs text-zinc-300 max-w-sm mx-auto leading-relaxed">
-                  The video stream could not be loaded in browser. Tap below to retry.
+                  The upstream FTP / BDIX server is slow or not directly routable on your current ISP connection.
                 </p>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[11px] text-zinc-400">
+                  <span>Movie Length:</span>
+                  <span className="text-white font-mono font-semibold">
+                    {effectiveDuration > 0 ? formatTime(effectiveDuration) : video.runtime || '2 Hours'}
+                  </span>
+                </div>
               </div>
               <div className="space-y-2 pt-1">
                 <button
                   onClick={() => {
                     setStreamLoadFailed(false);
                     fallbackAttemptsRef.current = 0;
-                    setStreamFallbackStep((prev) => (prev === 0 ? 1 : 0));
+                    advanceStreamFallback();
                     setIsBuffering(true);
                     window.setTimeout(() => {
                       if (videoRef.current) {
@@ -870,8 +956,38 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   className="w-full bg-[#E50914] hover:bg-[#f6121d] text-white font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.01] cursor-pointer shadow-lg shadow-red-500/20"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>Retry Playback</span>
+                  <span>
+                    {streamFallbackStep === 0
+                      ? 'Switch to High-Speed Proxy Route'
+                      : streamFallbackStep === 1 && alternateMirrorUrl
+                      ? 'Switch to Backup Mirror Server'
+                      : 'Retry Stream Connection'}
+                  </span>
                 </button>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      const urlToCopy = safePlayableUrl;
+                      navigator.clipboard?.writeText(urlToCopy);
+                      showToast('Direct stream link copied to clipboard!');
+                    }}
+                    className="py-2 px-3 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Stream Link</span>
+                  </button>
+
+                  <a
+                    href={safePlayableUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-2 px-3 bg-white/10 hover:bg-white/15 text-white rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open in VLC</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -932,6 +1048,12 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   <span className="text-emerald-400 font-medium">{currentAudioLabel}</span>
                 </>
               )}
+              {video.runtime && (
+                <>
+                  <span>·</span>
+                  <span className="text-amber-300 font-mono font-medium">{video.runtime}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -942,11 +1064,19 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           <button
             onClick={advanceStreamFallback}
             className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Toggle Direct or Proxy stream route"
+            title="Toggle Direct, Proxy or Mirror stream route"
           >
             <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">
-              {streamFallbackStep === 0 ? 'Direct Route' : 'Proxy Route'}
+              {streamFallbackStep === 0
+                ? 'Direct Route'
+                : streamFallbackStep === 1
+                ? 'Proxy Route'
+                : streamFallbackStep === 2
+                ? 'Mirror Direct'
+                : streamFallbackStep === 3
+                ? 'Mirror Proxy'
+                : 'Remux Route'}
             </span>
           </button>
 
@@ -1393,8 +1523,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
             />
           </div>
 
-          <span className="text-xs font-mono text-zinc-400 w-12 sm:w-14 shrink-0">
-            {formatTime(effectiveDuration)}
+          <span className="text-xs font-mono text-zinc-300 min-w-12 sm:min-w-16 shrink-0 font-medium text-left">
+            {effectiveDuration > 0
+              ? formatTime(effectiveDuration)
+              : video.runtime || '--:--'}
           </span>
         </div>
 

@@ -1945,7 +1945,7 @@ async function handleRangeStreamProxy(
   const rawRange = req.headers.range;
   let rangeToSend = rawRange;
 
-  const MAX_CHUNK = 8 * 1024 * 1024; // 8.0 MB chunk for instant start, smooth scrubbing, and buffer headroom
+  const MAX_CHUNK = Math.round(2.5 * 1024 * 1024); // 2.5 MB chunk (strictly under Vercel's 4.5 MB payload limit)
   if (rawRange) {
     const match = rawRange.match(/^bytes=(\d+)-(\d*)$/);
     if (match) {
@@ -1958,15 +1958,15 @@ async function handleRangeStreamProxy(
       rangeToSend = `bytes=${start}-${end}`;
     }
   } else {
-    // Initial chunk for instant metadata & ftyp/moov box parsing
-    rangeToSend = 'bytes=0-8388607';
+    // Initial chunk for instant metadata & ftyp/moov box parsing (2.5 MB)
+    rangeToSend = 'bytes=0-2621439';
   }
 
   const upstreamHeaders: Record<string, string> = {
     'User-Agent':
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
     Accept: '*/*',
-    Range: rangeToSend || 'bytes=0-3145727',
+    Range: rangeToSend || 'bytes=0-2621439',
   };
 
   const makeProxyRequest = (requestUrl: URL, redirectCount = 0) => {
@@ -1984,7 +1984,7 @@ async function handleRangeStreamProxy(
         method: 'GET',
         headers: upstreamHeaders,
         agent: currentAgent,
-        timeout: 7000,
+        timeout: 18000,
       },
       (upstreamRes) => {
         // Handle HTTP 301/302/307/308 redirects
@@ -2055,6 +2055,18 @@ async function handleRangeStreamProxy(
       try {
         upstreamReq.destroy();
       } catch {}
+
+      // If server2 timed out, try server3 mirror once
+      if (requestUrl.host.includes('server2.ftpbd.net') && !requestUrl.href.includes('__retried')) {
+        const mirrorHref = requestUrl.href.replace('server2.ftpbd.net', 'server3.ftpbd.net');
+        try {
+          const mirrorUrl = new URL(mirrorHref);
+          mirrorUrl.searchParams.set('__retried', '1');
+          makeProxyRequest(mirrorUrl, redirectCount);
+          return;
+        } catch {}
+      }
+
       if (!res.headersSent) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
@@ -2063,6 +2075,17 @@ async function handleRangeStreamProxy(
     });
 
     upstreamReq.on('error', (err: any) => {
+      // If server2 errored, try server3 mirror once
+      if (requestUrl.host.includes('server2.ftpbd.net') && !requestUrl.href.includes('__retried')) {
+        const mirrorHref = requestUrl.href.replace('server2.ftpbd.net', 'server3.ftpbd.net');
+        try {
+          const mirrorUrl = new URL(mirrorHref);
+          mirrorUrl.searchParams.set('__retried', '1');
+          makeProxyRequest(mirrorUrl, redirectCount);
+          return;
+        } catch {}
+      }
+
       if (!res.headersSent) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
