@@ -1945,7 +1945,7 @@ async function handleRangeStreamProxy(
   const rawRange = req.headers.range;
   let rangeToSend = rawRange;
 
-  const MAX_CHUNK = 3 * 1024 * 1024; // 3.0 MB chunk for instant start and smooth scrubbing
+  const MAX_CHUNK = 8 * 1024 * 1024; // 8.0 MB chunk for instant start, smooth scrubbing, and buffer headroom
   if (rawRange) {
     const match = rawRange.match(/^bytes=(\d+)-(\d*)$/);
     if (match) {
@@ -1959,7 +1959,7 @@ async function handleRangeStreamProxy(
     }
   } else {
     // Initial chunk for instant metadata & ftyp/moov box parsing
-    rangeToSend = 'bytes=0-3145727';
+    rangeToSend = 'bytes=0-8388607';
   }
 
   const upstreamHeaders: Record<string, string> = {

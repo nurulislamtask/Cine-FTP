@@ -381,7 +381,7 @@ export default function App() {
 
     // 1. Home Navigation: Combine ALL movies & series from all servers
     if (activeNav === 'home') {
-      loadMultiSourceGroup(sources, 'Home — All Movies & Series', true);
+      loadMultiSourceGroup(sources, 'Home — All Movies & Series', false);
       return;
     }
 

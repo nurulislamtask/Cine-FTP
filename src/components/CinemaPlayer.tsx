@@ -294,22 +294,22 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       return safePlayableUrl;
     }
 
-    // Step 1: Direct Alternate Mirror cluster (e.g. server3 instead of server2) or Proxy
-    if (streamFallbackStep === 1) {
-      if (alternateMirrorUrl && !(isHttpsOrigin && alternateMirrorUrl.startsWith('http://'))) return alternateMirrorUrl;
+    // Step 1: High-Speed HTTP Range Proxy (handles CORS, Range 206, and server-side connection)
+    if (streamFallbackStep === 1 || isHttpOnHttps) {
       return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
     }
 
-    // Step 2: Proxy route (handles CORS and range requests) — always safe for HTTPS sites
-    return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
-  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
+    // Step 2: Real-time remux / transcode fallback route
+    return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=0`;
+  }, [safePlayableUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
 
   const fallbackAttemptsRef = useRef(0);
 
-  // Smooth rotation between direct stream and cluster mirror without freezing the player
+  // Smooth rotation between direct stream and proxy route without freezing the player
   const advanceStreamFallback = useCallback(() => {
     setStreamFallbackStep((prev) => (prev + 1) % 3);
     setIsBuffering(true);
+    setBufferWaitSeconds(0);
   }, []);
 
   const [bufferWaitSeconds, setBufferWaitSeconds] = useState(0);
@@ -341,9 +341,9 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     window.location.href = `vlc://${safePlayableUrl}`;
   }, [safePlayableUrl, showToast]);
 
-  // Buffer stall detector: if buffering takes > 4s on step 0, auto-switch to proxy route; if still buffering, show rescue overlay
+  // Buffer stall detector: if buffering takes > 3s on step 0, auto-switch to proxy route; if still buffering at 4s, show rescue overlay
   useEffect(() => {
-    if (!isBuffering || isPlaying || !streamUrl) {
+    if (!isBuffering || !streamUrl) {
       setBufferWaitSeconds(0);
       return;
     }
@@ -351,7 +351,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     const interval = setInterval(() => {
       setBufferWaitSeconds((prev) => {
         const next = prev + 1;
-        if (next === 4 && streamFallbackStep === 0) {
+        if (next === 3 && streamFallbackStep === 0) {
           advanceStreamFallback();
         }
         return next;
@@ -359,7 +359,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isBuffering, isPlaying, streamUrl, streamFallbackStep, advanceStreamFallback]);
+  }, [isBuffering, streamUrl, streamFallbackStep, advanceStreamFallback]);
 
   // Autoplay handler with audio policy fallback
   useEffect(() => {
@@ -756,8 +756,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           ref={videoRef}
           key={video.id}
           src={streamUrl || undefined}
-          crossOrigin="anonymous"
-          preload="metadata"
+          preload="auto"
           autoPlay
           playsInline
           muted={isMuted}
@@ -878,21 +877,21 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
         )}
 
         {/* Clean Buffering Spinner (during first 4 seconds or if rescue card dismissed) */}
-        {isBuffering && !isResolvingFolder && streamUrl && (bufferWaitSeconds < 5 || dismissRescueCard) && (
+        {isBuffering && !isResolvingFolder && streamUrl && (bufferWaitSeconds < 4 || dismissRescueCard) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
             <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
               {streamFallbackStep === 0
                 ? 'Buffering direct stream...'
                 : streamFallbackStep === 1
-                ? 'Buffering cluster mirror...'
-                : 'Buffering proxy stream...'}
+                ? 'Buffering proxy stream...'
+                : 'Buffering remux stream...'}
             </span>
           </div>
         )}
 
-        {/* Playback Assistance / Rescue Overlay when buffering takes >= 5s */}
-        {bufferWaitSeconds >= 5 && !dismissRescueCard && !isPlaying && (
+        {/* Playback Assistance / Rescue Overlay when buffering takes >= 4s */}
+        {bufferWaitSeconds >= 4 && !dismissRescueCard && (
           <div
             onClick={(e) => e.stopPropagation()}
             className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300"
@@ -1082,7 +1081,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           >
             <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">
-              {streamFallbackStep === 0 ? 'Direct Route' : streamFallbackStep === 1 ? 'Cluster Mirror' : 'Proxy Route'}
+              {streamFallbackStep === 0 ? 'Direct Route' : streamFallbackStep === 1 ? 'Proxy Route' : 'Remux Route'}
             </span>
           </button>
 

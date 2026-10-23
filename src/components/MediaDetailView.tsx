@@ -73,14 +73,20 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
   const [subtitles, setSubtitles] = useState<ParsedFtpItem[]>([]);
 
   // Strictly distinguish Series from Movies:
-  // A movie folder (like The Substance 2024 .../) is a MOVIE, NOT a TV show!
+  // Movies (Hollywood, Bollywood, South, Bangla, Animation, etc.) are MOVIES, NEVER TV series!
+  const isMovieSource =
+    item.mediaKind === 'movie' ||
+    /english\s*movies|hindi\s*movies|bangla|south\s*indian|kolkata|hollywood|bollywood|tollywood|animation\s*movies/i.test(item.sourceServerName || '') ||
+    /english%20movies|hindi%20movies|bangla|south%20indian|kolkata|animation%20movies/i.test(item.url || '');
+
   const isSeries =
-    item.mediaKind !== 'movie' &&
+    !isMovieSource &&
     (item.mediaKind === 'series' ||
       item.mediaKind === 'episode' ||
       (item.season !== undefined && item.season > 0) ||
       /\b(season\s*\d|s0[1-9]|s[1-9]\d)\b/i.test(item.rawName) ||
-      /\b(tv\s*series|web\s*series)\b/i.test(item.rawName));
+      /\b(tv\s*series|web\s*series)\b/i.test(item.rawName) ||
+      /tv-series|web-series|foreign-tv/i.test(item.url));
 
   // Load either TV Series seasons or Movie files
   useEffect(() => {
