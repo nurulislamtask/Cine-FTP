@@ -328,21 +328,20 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
     }
 
-    // Step 3: Alternate Mirror Proxy
-    if (streamFallbackStep === 3 && alternateMirrorUrl) {
+    // Step 3: Alternate Mirror Proxy (or fallback to primary proxy)
+    if (alternateMirrorUrl) {
       return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
     }
 
-    // Step 4: Transcode / Remux stream
-    return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
-  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin, selectedAudioTrack]);
+    return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
+  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
 
   const fallbackAttemptsRef = useRef(0);
 
   // Toggle between direct stream, proxy route, and mirror smoothly
   const advanceStreamFallback = useCallback(() => {
     setStreamFallbackStep((prev) => {
-      const maxSteps = alternateMirrorUrl ? 4 : 2;
+      const maxSteps = alternateMirrorUrl ? 3 : 1;
       return (prev + 1) % (maxSteps + 1);
     });
     setIsBuffering(true);
@@ -355,22 +354,39 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     window.setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Fast failover watchdog: If direct stream hangs with readyState === 0 after 4s, auto-advance to proxy!
+  // Universal Buffering Watchdog (Max 6.5 seconds per attempt):
+  // Never lets the player hang indefinitely in buffering state!
   useEffect(() => {
-    if (!isPlaying && !isBuffering) return;
-    if (streamLoadFailed || !streamUrl) return;
+    if (!streamUrl || streamLoadFailed) return;
+    if (!isBuffering && isPlaying) return;
 
     const timer = window.setTimeout(() => {
       const v = videoRef.current;
-      if (v && v.readyState === 0 && isBuffering && streamFallbackStep === 0) {
-        console.warn('Direct stream connection slow/unreachable, advancing to proxy...');
-        advanceStreamFallback();
-        showToast('Connecting via high-speed stream proxy...');
+      // If still stuck buffering with no playable frames (readyState < 2)
+      if (v && v.readyState < 2) {
+        console.warn(`Stream stalled on step ${streamFallbackStep}, attempting fallback...`);
+        const maxSteps = alternateMirrorUrl ? 3 : 1;
+        if (fallbackAttemptsRef.current < maxSteps) {
+          fallbackAttemptsRef.current += 1;
+          advanceStreamFallback();
+          const nextStep = (streamFallbackStep + 1) % (maxSteps + 1);
+          const msg =
+            nextStep === 1
+              ? 'Direct connection slow, switching to stream proxy...'
+              : nextStep === 2
+              ? 'Trying backup mirror stream...'
+              : 'Connecting via backup route...';
+          showToast(msg);
+        } else {
+          // All steps attempted, stop infinite spinning and show recovery options immediately!
+          setIsBuffering(false);
+          setStreamLoadFailed(true);
+        }
       }
-    }, 4000);
+    }, 6500);
 
     return () => window.clearTimeout(timer);
-  }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, advanceStreamFallback, showToast]);
+  }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, alternateMirrorUrl, advanceStreamFallback, showToast]);
 
 
   // Autoplay handler with audio policy fallback
@@ -911,9 +927,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                 ? 'Loading proxy stream...'
                 : streamFallbackStep === 2
                 ? 'Connecting backup mirror...'
-                : streamFallbackStep === 3
-                ? 'Loading backup proxy...'
-                : 'Remuxing video stream...'}
+                : 'Loading backup proxy...'}
             </span>
           </div>
         )}

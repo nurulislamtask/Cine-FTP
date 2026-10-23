@@ -1984,7 +1984,7 @@ async function handleRangeStreamProxy(
         method: 'GET',
         headers: upstreamHeaders,
         agent: currentAgent,
-        timeout: 18000,
+        timeout: 6000,
       },
       (upstreamRes) => {
         // Handle HTTP 301/302/307/308 redirects
