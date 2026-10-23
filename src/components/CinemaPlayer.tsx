@@ -295,71 +295,23 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     }
 
     // Step 1: High-Speed HTTP Range Proxy (handles CORS, Range 206, and server-side connection)
-    if (streamFallbackStep === 1 || isHttpOnHttps) {
-      return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
-    }
-
-    // Step 2: Real-time remux / transcode fallback route
-    return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=0`;
+    return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
   }, [safePlayableUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
 
   const fallbackAttemptsRef = useRef(0);
 
-  // Smooth rotation between direct stream and proxy route without freezing the player
+  // Toggle between direct stream and proxy route smoothly
   const advanceStreamFallback = useCallback(() => {
-    setStreamFallbackStep((prev) => (prev + 1) % 3);
+    setStreamFallbackStep((prev) => (prev === 0 ? 1 : 0));
     setIsBuffering(true);
-    setBufferWaitSeconds(0);
   }, []);
 
-  const [bufferWaitSeconds, setBufferWaitSeconds] = useState(0);
-  const [dismissRescueCard, setDismissRescueCard] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     window.setTimeout(() => setToastMessage(null), 3000);
   }, []);
-
-  const handleLaunchVlc = useCallback(() => {
-    try {
-      navigator.clipboard.writeText(safePlayableUrl);
-      showToast('Stream link copied! Launching VLC Player...');
-    } catch {
-      showToast('Launching VLC Player...');
-    }
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    if (isAndroid) {
-      const cleanUrl = safePlayableUrl.replace(/^https?:\/\//i, '');
-      const isHttps = safePlayableUrl.startsWith('https://');
-      const intentUrl = `intent:${cleanUrl}#Intent;action=android.intent.action.VIEW;type=video/*;scheme=${isHttps ? 'https' : 'http'};end;`;
-      window.location.href = intentUrl;
-      return;
-    }
-
-    window.location.href = `vlc://${safePlayableUrl}`;
-  }, [safePlayableUrl, showToast]);
-
-  // Buffer stall detector: if buffering takes > 3s on step 0, auto-switch to proxy route; if still buffering at 4s, show rescue overlay
-  useEffect(() => {
-    if (!isBuffering || !streamUrl) {
-      setBufferWaitSeconds(0);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setBufferWaitSeconds((prev) => {
-        const next = prev + 1;
-        if (next === 3 && streamFallbackStep === 0) {
-          advanceStreamFallback();
-        }
-        return next;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isBuffering, streamUrl, streamFallbackStep, advanceStreamFallback]);
 
   // Autoplay handler with audio policy fallback
   useEffect(() => {
@@ -876,84 +828,13 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           </div>
         )}
 
-        {/* Clean Buffering Spinner (during first 4 seconds or if rescue card dismissed) */}
-        {isBuffering && !isResolvingFolder && streamUrl && (bufferWaitSeconds < 4 || dismissRescueCard) && (
+        {/* Clean Buffering Spinner */}
+        {isBuffering && !isResolvingFolder && streamUrl && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
             <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
-              {streamFallbackStep === 0
-                ? 'Buffering direct stream...'
-                : streamFallbackStep === 1
-                ? 'Buffering proxy stream...'
-                : 'Buffering remux stream...'}
+              {streamFallbackStep === 0 ? 'Loading direct stream...' : 'Loading proxy stream...'}
             </span>
-          </div>
-        )}
-
-        {/* Playback Assistance / Rescue Overlay when buffering takes >= 4s */}
-        {bufferWaitSeconds >= 4 && !dismissRescueCard && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300"
-          >
-            <div className="max-w-md w-full bg-[#10141F] border border-amber-500/30 rounded-2xl p-6 shadow-2xl space-y-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-                <Film className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Stream Taking Longer to Buffer?
-                </h3>
-                <p className="text-xs text-zinc-300 max-w-sm mx-auto leading-relaxed">
-                  {safePlayableUrl.endsWith('.mkv') || safePlayableUrl.includes('DD5.1')
-                    ? 'This MKV file with Dolby Digital 5.1 (AC3) audio plays with instant zero-lag Gigabit speed in VLC or your device player.'
-                    : 'The video stream may be responding slowly. You can switch stream routes, open in VLC, or download directly.'}
-                </p>
-              </div>
-
-              {/* Action buttons */}
-              <div className="space-y-2 pt-1">
-                <button
-                  onClick={handleLaunchVlc}
-                  className="w-full bg-[#E5A00D] hover:bg-[#F59E0B] text-black font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.01] cursor-pointer shadow-lg shadow-amber-500/20"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Open & Play in VLC Player</span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={safePlayableUrl}
-                    download
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bg-[#1C2230] hover:bg-[#252D3F] text-zinc-100 font-medium text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 border border-white/10 transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Download File</span>
-                  </a>
-
-                  <button
-                    onClick={() => {
-                      advanceStreamFallback();
-                      setBufferWaitSeconds(0);
-                    }}
-                    className="bg-[#1C2230] hover:bg-[#252D3F] text-amber-300 font-medium text-xs py-2 px-3 rounded-xl border border-amber-500/20 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>{streamFallbackStep === 0 ? 'Try Proxy' : 'Try Direct'}</span>
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setDismissRescueCard(true)}
-                  className="text-xs text-zinc-400 hover:text-white pt-2 cursor-pointer transition-colors block mx-auto underline decoration-dotted"
-                >
-                  Keep waiting in browser
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -966,10 +847,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
               </div>
               <div className="space-y-1">
                 <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Stream Unavailable
+                  Playback Error
                 </h3>
                 <p className="text-xs text-zinc-300 max-w-sm mx-auto leading-relaxed">
-                  The video stream could not be loaded. This may be due to a browser security block (mixed content), CORS restriction, or an unavailable media server.
+                  The video stream could not be loaded in browser. Tap below to retry.
                 </p>
               </div>
               <div className="space-y-2 pt-1">
@@ -977,35 +858,19 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   onClick={() => {
                     setStreamLoadFailed(false);
                     fallbackAttemptsRef.current = 0;
-                    setStreamFallbackStep(0);
+                    setStreamFallbackStep((prev) => (prev === 0 ? 1 : 0));
                     setIsBuffering(true);
                     window.setTimeout(() => {
                       if (videoRef.current) {
                         videoRef.current.load();
+                        videoRef.current.play().catch(() => {});
                       }
                     }, 50);
                   }}
                   className="w-full bg-[#E50914] hover:bg-[#f6121d] text-white font-semibold text-xs sm:text-sm py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-transform hover:scale-[1.01] cursor-pointer shadow-lg shadow-red-500/20"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>Retry Stream</span>
-                </button>
-                <a
-                  href={safePlayableUrl}
-                  download
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block w-full bg-[#1C2230] hover:bg-[#252D3F] text-zinc-100 font-medium text-xs py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 border border-white/10 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Download File Directly</span>
-                </a>
-                <button
-                  onClick={handleLaunchVlc}
-                  className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-medium text-xs py-2 px-3 rounded-xl border border-amber-500/20 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Open in VLC Player</span>
+                  <span>Retry Playback</span>
                 </button>
               </div>
             </div>
@@ -1077,36 +942,13 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           <button
             onClick={advanceStreamFallback}
             className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Cycle between Direct, Proxy, and Alternate routes"
+            title="Toggle Direct or Proxy stream route"
           >
             <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">
-              {streamFallbackStep === 0 ? 'Direct Route' : streamFallbackStep === 1 ? 'Proxy Route' : 'Remux Route'}
+              {streamFallbackStep === 0 ? 'Direct Route' : 'Proxy Route'}
             </span>
           </button>
-
-          {/* Play in VLC Button */}
-          <button
-            onClick={handleLaunchVlc}
-            className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Play stream in VLC Player (surround sound & hardware acceleration)"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Play in VLC</span>
-          </button>
-
-          {/* Download File */}
-          <a
-            href={safePlayableUrl}
-            download
-            target="_blank"
-            rel="noreferrer"
-            className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
-            title="Download file directly"
-          >
-            <Download className="w-3.5 h-3.5 text-zinc-300" />
-            <span className="hidden sm:inline">Download</span>
-          </a>
 
           {/* Copy Stream Link */}
           <button

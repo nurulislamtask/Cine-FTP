@@ -59,7 +59,6 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [vlcTriggered, setVlcTriggered] = useState(false);
 
   // Series state
   const [seasons, setSeasons] = useState<SeasonFolderInfo[]>([]);
@@ -229,31 +228,6 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
   const tagline = enrichedMeta?.tagline;
   const director = enrichedMeta?.director;
   const cast = enrichedMeta?.cast || item.cast;
-
-  // Launch external player (VLC / PotPlayer)
-  const handlePlayInVlc = () => {
-    try {
-      navigator.clipboard.writeText(safeDirectUrl);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
-    } catch {}
-
-    setVlcTriggered(true);
-    setTimeout(() => setVlcTriggered(false), 3000);
-
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    if (isAndroid) {
-      const cleanUrl = safeDirectUrl.replace(/^https?:\/\//i, '');
-      const isHttps = safeDirectUrl.startsWith('https://');
-      const intentUrl = `intent:${cleanUrl}#Intent;action=android.intent.action.VIEW;type=video/*;scheme=${isHttps ? 'https' : 'http'};end;`;
-      window.location.href = intentUrl;
-      return;
-    }
-
-    // Try standard VLC protocol scheme
-    const vlcProtocol = `vlc://${safeDirectUrl}`;
-    window.location.href = vlcProtocol;
-  };
 
   const handleCopyLink = () => {
     try {
@@ -433,29 +407,6 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
                 <span>{isSeries ? 'Play S01E01' : 'Play Movie'}</span>
               </button>
 
-              {/* Play in VLC Button */}
-              <button
-                onClick={handlePlayInVlc}
-                className="bg-[#1C2230] hover:bg-[#252D3F] text-amber-400 hover:text-amber-300 font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 border border-amber-500/30 transition-colors cursor-pointer"
-                title="Open stream in VLC Media Player with hardware acceleration and 5.1 audio"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>{vlcTriggered ? 'Opening VLC...' : 'Play in VLC'}</span>
-              </button>
-
-              {/* Direct Download File Button */}
-              <a
-                href={safeDirectUrl}
-                download
-                target="_blank"
-                rel="noreferrer"
-                className="bg-[#141822] hover:bg-[#1E2433] text-zinc-300 hover:text-white font-medium text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 border border-white/10 transition-colors cursor-pointer"
-                title="Download direct video file"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download ({sizeFormatted})</span>
-              </a>
-
               {/* Watchlist Button */}
               <button
                 onClick={() => onToggleWatchlist(item)}
@@ -605,18 +556,6 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
               </div>
             )}
 
-            {/* Playback Assistance Note */}
-            <div className="bg-[#121624] border border-[#1F293D] rounded-xl p-4 flex items-start gap-3.5 text-xs text-zinc-300">
-              <Radio className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="font-semibold text-zinc-100">
-                  Dual-Mode Playback (Direct Web + VLC External)
-                </p>
-                <p className="text-zinc-400 leading-relaxed">
-                  Click <strong className="text-amber-400">Play Movie</strong> to watch right inside CineFTP. If your browser does not support Dolby Digital 5.1 (AC3) audio in MKV containers or buffers, click <strong className="text-amber-400">Play in VLC</strong> for instant zero-buffering playback with full surround sound and hardware acceleration.
-                </p>
-              </div>
-            </div>
           </div>
         ) : (
           /* SERIES VIEW: Season Tabs & Episodes List */
