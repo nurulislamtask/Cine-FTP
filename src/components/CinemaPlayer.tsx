@@ -303,49 +303,74 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     rawVideoUrl.endsWith('/') ||
     !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(rawVideoUrl);
 
+  const isMkvOrUnsupported = useMemo(() => {
+    return /\.(mkv|avi|ts|m2ts|flv|wmv|vob)(\?.*)?$/i.test(safePlayableUrl);
+  }, [safePlayableUrl]);
+
   const streamUrl = useMemo(() => {
     if (isResolvingFolder || (isTargetFolder && !overrideVideoUrl)) {
       return '';
     }
 
-    const isHttpOnHttps = isHttpsOrigin && safePlayableUrl.startsWith('http://') && !safePlayableUrl.startsWith('https://');
-
-    // Step 0: Direct stream (fastest native route)
-    if (streamFallbackStep === 0 && !isHttpOnHttps) {
+    // MKV or non-native container format:
+    // Chromium / WebKit cannot natively decode MKV containers in HTML5 <video>.
+    // Step 0 streams real-time fragmented MP4 via /api/transcode with AAC audio.
+    if (isMkvOrUnsupported) {
+      if (streamFallbackStep === 0) {
+        return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
+      }
+      if (streamFallbackStep === 1) {
+        return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}&reencode=1`;
+      }
+      if (streamFallbackStep === 2) {
+        return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
+      }
       return safePlayableUrl;
     }
 
-    // Step 1: High-Speed Range Proxy for primary server
-    if (streamFallbackStep === 1 || isHttpOnHttps) {
+    // Standard MP4 / M4V / WEBM formats:
+    // Step 0: Same-Origin High-Speed Range Proxy (/api/stream)
+    // Ensures sub-second 206 Partial Content, bypasses missing CORS on remote servers,
+    // and guarantees instant playback inside preview iframes.
+    if (streamFallbackStep === 0) {
       return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
     }
 
-    // Step 2: Alternate Mirror Direct (if available)
-    if (streamFallbackStep === 2 && alternateMirrorUrl) {
-      if (!isHttpsOrigin || alternateMirrorUrl.startsWith('https://')) {
-        return alternateMirrorUrl;
+    // Step 1: Direct media stream (if HTTPS or native network allows)
+    if (streamFallbackStep === 1) {
+      if (!isHttpsOrigin || safePlayableUrl.startsWith('https://')) {
+        return safePlayableUrl;
       }
+      return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
+    }
+
+    // Step 2: Alternate Mirror Proxy (if available)
+    if (streamFallbackStep === 2 && alternateMirrorUrl) {
       return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
     }
 
-    // Step 3: Alternate Mirror Proxy (or fallback to primary proxy)
-    if (alternateMirrorUrl) {
-      return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
-    }
-
-    return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
-  }, [safePlayableUrl, alternateMirrorUrl, streamFallbackStep, isResolvingFolder, isTargetFolder, overrideVideoUrl, isHttpsOrigin]);
+    // Step 3: Stream Remux Fallback (in case audio codec AC3/DTS is unsupported by browser)
+    return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
+  }, [
+    safePlayableUrl,
+    alternateMirrorUrl,
+    streamFallbackStep,
+    isResolvingFolder,
+    isTargetFolder,
+    overrideVideoUrl,
+    isHttpsOrigin,
+    isMkvOrUnsupported,
+    selectedAudioTrack,
+  ]);
 
   const fallbackAttemptsRef = useRef(0);
 
-  // Toggle between direct stream, proxy route, and mirror smoothly
+  // Switch between direct stream, proxy, and transcode routes cleanly
   const advanceStreamFallback = useCallback(() => {
-    setStreamFallbackStep((prev) => {
-      const maxSteps = alternateMirrorUrl ? 3 : 1;
-      return (prev + 1) % (maxSteps + 1);
-    });
+    setStreamFallbackStep((prev) => (prev + 1) % (isMkvOrUnsupported ? 3 : 4));
     setIsBuffering(true);
-  }, [alternateMirrorUrl]);
+    setStreamLoadFailed(false);
+  }, [isMkvOrUnsupported]);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -354,8 +379,9 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     window.setTimeout(() => setToastMessage(null), 3500);
   }, []);
 
-  // Universal Buffering Watchdog (Max 6.5 seconds per attempt):
-  // Never lets the player hang indefinitely in buffering state!
+  // Universal Buffering Watchdog (15 seconds):
+  // Gives ample time for upstream network handshakes and buffer preloading
+  // while ensuring users never get permanently stuck.
   useEffect(() => {
     if (!streamUrl || streamLoadFailed) return;
     if (!isBuffering && isPlaying) return;
@@ -365,28 +391,26 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       // If still stuck buffering with no playable frames (readyState < 2)
       if (v && v.readyState < 2) {
         console.warn(`Stream stalled on step ${streamFallbackStep}, attempting fallback...`);
-        const maxSteps = alternateMirrorUrl ? 3 : 1;
+        const maxSteps = isMkvOrUnsupported ? 2 : 3;
         if (fallbackAttemptsRef.current < maxSteps) {
           fallbackAttemptsRef.current += 1;
-          advanceStreamFallback();
-          const nextStep = (streamFallbackStep + 1) % (maxSteps + 1);
-          const msg =
-            nextStep === 1
-              ? 'Direct connection slow, switching to stream proxy...'
-              : nextStep === 2
-              ? 'Trying backup mirror stream...'
-              : 'Connecting via backup route...';
-          showToast(msg);
+          setStreamFallbackStep((prev) => prev + 1);
+          setIsBuffering(true);
+          showToast(
+            isMkvOrUnsupported
+              ? 'Buffering took long, switching to remux route...'
+              : 'Direct route slow, switched to range stream proxy...'
+          );
         } else {
-          // All steps attempted, stop infinite spinning and show recovery options immediately!
+          // All fallback routes attempted, show recovery options cleanly
           setIsBuffering(false);
           setStreamLoadFailed(true);
         }
       }
-    }, 6500);
+    }, 15000);
 
     return () => window.clearTimeout(timer);
-  }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, alternateMirrorUrl, advanceStreamFallback, showToast]);
+  }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, showToast, isMkvOrUnsupported]);
 
 
   // Autoplay handler with audio policy fallback
@@ -783,7 +807,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       >
         <video
           ref={videoRef}
-          key={video.id}
+          key={`${video.id}-${streamFallbackStep}`}
           src={streamUrl || undefined}
           preload="auto"
           autoPlay
@@ -797,7 +821,9 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           onPlaying={() => setIsBuffering(false)}
           onLoadedData={() => setIsBuffering(false)}
           onPause={() => setIsPlaying(false)}
-          onWaiting={() => setIsBuffering(true)}
+          onWaiting={() => {
+            if (!streamLoadFailed) setIsBuffering(true);
+          }}
           onCanPlay={() => {
             setIsBuffering(false);
             if (videoRef.current) {
@@ -842,29 +868,25 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
             }
           }}
           onError={() => {
-            const maxAttempts = alternateMirrorUrl ? 4 : 3;
-            if (fallbackAttemptsRef.current < maxAttempts) {
+            const maxSteps = isMkvOrUnsupported ? 2 : 3;
+            if (fallbackAttemptsRef.current < maxSteps) {
               fallbackAttemptsRef.current += 1;
               const cur = videoRef.current?.currentTime || currentTime;
-              advanceStreamFallback();
+              setStreamFallbackStep((prev) => prev + 1);
+              setIsBuffering(true);
               setStreamLoadFailed(false);
-              const nextStep = (streamFallbackStep + 1) % (maxAttempts + 1);
-              const stepName =
-                nextStep === 1
-                  ? 'Switching to Stream Proxy...'
-                  : nextStep === 2
-                  ? 'Trying backup mirror stream...'
-                  : nextStep === 3
-                  ? 'Trying backup proxy stream...'
-                  : 'Retrying stream connection...';
-              showToast(stepName);
+              showToast(
+                isMkvOrUnsupported
+                  ? 'Remuxing stream for web playback...'
+                  : 'Direct stream restricted, switched to stream proxy...'
+              );
               window.setTimeout(() => {
                 if (videoRef.current && cur > 0) {
                   try {
                     videoRef.current.currentTime = cur;
                   } catch {}
                 }
-              }, 300);
+              }, 250);
             } else {
               setIsBuffering(false);
               setStreamLoadFailed(true);
@@ -917,17 +939,13 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
         )}
 
         {/* Clean Buffering Spinner */}
-        {isBuffering && !isResolvingFolder && streamUrl && (
+        {isBuffering && !isResolvingFolder && streamUrl && !streamLoadFailed && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
             <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
               {streamFallbackStep === 0
                 ? 'Connecting direct stream...'
-                : streamFallbackStep === 1
-                ? 'Loading proxy stream...'
-                : streamFallbackStep === 2
-                ? 'Connecting backup mirror...'
-                : 'Loading backup proxy...'}
+                : 'Loading proxy stream...'}
             </span>
           </div>
         )}
@@ -944,7 +962,9 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   Playback Connection Error
                 </h3>
                 <p className="text-xs text-zinc-300 max-w-sm mx-auto leading-relaxed">
-                  The upstream FTP / BDIX server is slow or not directly routable on your current ISP connection.
+                  {safePlayableUrl.includes('ftpbd.net') || /172\.(1[6-9]|2\d|3[0-1])\./.test(safePlayableUrl)
+                    ? 'This private BDIX stream requires direct domestic ISP connection or local peering. For global access, use our verified Public Cinema library.'
+                    : 'The upstream media server is slow or temporarily unreachable. You can open the link directly or try playing via VLC.'}
                 </p>
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[11px] text-zinc-400">
                   <span>Movie Length:</span>
@@ -958,7 +978,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                   onClick={() => {
                     setStreamLoadFailed(false);
                     fallbackAttemptsRef.current = 0;
-                    advanceStreamFallback();
+                    setStreamFallbackStep((prev) => (prev + 1) % (isMkvOrUnsupported ? 3 : 4));
                     setIsBuffering(true);
                     window.setTimeout(() => {
                       if (videoRef.current) {
@@ -971,11 +991,13 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>
-                    {streamFallbackStep === 0
-                      ? 'Switch to High-Speed Proxy Route'
-                      : streamFallbackStep === 1 && alternateMirrorUrl
-                      ? 'Switch to Backup Mirror Server'
-                      : 'Retry Stream Connection'}
+                    {isMkvOrUnsupported
+                      ? streamFallbackStep === 0
+                        ? 'Retry with Re-encode Remux'
+                        : 'Retry Stream Remux'
+                      : streamFallbackStep === 0
+                      ? 'Retry with Direct Stream'
+                      : 'Retry via Stream Proxy'}
                   </span>
                 </button>
 
@@ -1082,13 +1104,17 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           >
             <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">
-              {streamFallbackStep === 0
-                ? 'Direct Route'
+              {isMkvOrUnsupported
+                ? streamFallbackStep === 0
+                  ? 'Remux Route (MKV)'
+                  : streamFallbackStep === 1
+                  ? 'Re-encode Route'
+                  : 'Raw Stream'
+                : streamFallbackStep === 0
+                ? 'Proxy Route (Fast)'
                 : streamFallbackStep === 1
-                ? 'Proxy Route'
+                ? 'Direct Route'
                 : streamFallbackStep === 2
-                ? 'Mirror Direct'
-                : streamFallbackStep === 3
                 ? 'Mirror Proxy'
                 : 'Remux Route'}
             </span>

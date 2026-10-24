@@ -1984,7 +1984,7 @@ async function handleRangeStreamProxy(
         method: 'GET',
         headers: upstreamHeaders,
         agent: currentAgent,
-        timeout: 6000,
+        timeout: 4000,
       },
       (upstreamRes) => {
         // Handle HTTP 301/302/307/308 redirects
@@ -2017,7 +2017,7 @@ async function handleRangeStreamProxy(
         let contentType = upstreamRes.headers['content-type'];
         if (!contentType || contentType === 'application/octet-stream' || contentType.includes('text/html')) {
           if (ext === 'mp4' || ext === 'm4v') contentType = 'video/mp4';
-          else if (ext === 'mkv') contentType = 'video/x-matroska';
+          else if (ext === 'mkv') contentType = 'video/mp4';
           else if (ext === 'webm') contentType = 'video/webm';
           else if (ext === 'ts') contentType = 'video/mp2t';
           else contentType = 'video/mp4';
@@ -2056,17 +2056,6 @@ async function handleRangeStreamProxy(
         upstreamReq.destroy();
       } catch {}
 
-      // If server2 timed out, try server3 mirror once
-      if (requestUrl.host.includes('server2.ftpbd.net') && !requestUrl.href.includes('__retried')) {
-        const mirrorHref = requestUrl.href.replace('server2.ftpbd.net', 'server3.ftpbd.net');
-        try {
-          const mirrorUrl = new URL(mirrorHref);
-          mirrorUrl.searchParams.set('__retried', '1');
-          makeProxyRequest(mirrorUrl, redirectCount);
-          return;
-        } catch {}
-      }
-
       if (!res.headersSent) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
@@ -2075,17 +2064,6 @@ async function handleRangeStreamProxy(
     });
 
     upstreamReq.on('error', (err: any) => {
-      // If server2 errored, try server3 mirror once
-      if (requestUrl.host.includes('server2.ftpbd.net') && !requestUrl.href.includes('__retried')) {
-        const mirrorHref = requestUrl.href.replace('server2.ftpbd.net', 'server3.ftpbd.net');
-        try {
-          const mirrorUrl = new URL(mirrorHref);
-          mirrorUrl.searchParams.set('__retried', '1');
-          makeProxyRequest(mirrorUrl, redirectCount);
-          return;
-        } catch {}
-      }
-
       if (!res.headersSent) {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
@@ -2395,6 +2373,11 @@ app.get(['/api/transcode', '/transcode'], (req, res) => {
 
   res.setHeader('Content-Type', 'video/mp4');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Range, Authorization');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges, Content-Type');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
   const ffmpegArgs: string[] = ['-hide_banner', '-loglevel', 'error', '-tls_verify', '0'];
 
@@ -2433,6 +2416,8 @@ app.get(['/api/transcode', '/transcode'], (req, res) => {
   ffmpegArgs.push(
     '-c:a',
     'aac',
+    '-ac',
+    '2',
     '-b:a',
     '256k',
     '-ar',

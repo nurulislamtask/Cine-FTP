@@ -22,8 +22,26 @@ import { MobileBottomNav } from './components/MobileBottomNav';
 
 const INITIAL_SOURCES: AppSource[] = [
   {
+    id: 'src-public-cinema',
+    name: 'English Movies (Global HTTP)',
+    url: 'https://www.fradgify.kozow.com/media/movies/',
+    type: 'movies',
+    count: 324,
+    lastSynced: 'Just now',
+    status: 'online',
+  },
+  {
+    id: 'src-public-series',
+    name: 'TV Series (Global HTTP)',
+    url: 'https://www.fradgify.kozow.com/media/tv/',
+    type: 'series',
+    count: 99,
+    lastSynced: 'Just now',
+    status: 'online',
+  },
+  {
     id: 'src-english-movies-7',
-    name: 'English Movies',
+    name: 'English Movies (BDIX)',
     url: 'https://server2.ftpbd.net/FTP-2/English%20Movies/',
     type: 'movies',
     count: 3850,
@@ -68,7 +86,7 @@ const INITIAL_SOURCES: AppSource[] = [
   },
   {
     id: 'src-korean-series',
-    name: 'TV & Web Series',
+    name: 'TV & Web Series (BDIX)',
     url: 'https://server4.ftpbd.net/FTP-4/English-Foreign-TV-Series/',
     type: 'series',
     count: 1200,
@@ -96,19 +114,13 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [sources, setSources] = useState<AppSource[]>(() => {
     try {
-      const raw = localStorage.getItem('cineftp_sources_v8') || localStorage.getItem('cineftp_sources_v7');
+      const raw = localStorage.getItem('cineftp_sources_v9') || localStorage.getItem('cineftp_sources_v8');
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Auto-migrate any old 172.16.x LAN URLs to public HTTPS mirrors
-          const migrated = parsed.map((s: AppSource) => {
-            const matchInit = INITIAL_SOURCES.find((init) => init.id === s.id);
-            if (matchInit && (/^http:\/\/172\./.test(s.url) || s.url.includes('dhaka-flix'))) {
-              return { ...s, url: matchInit.url };
-            }
-            return s;
-          });
-          const clean = migrated.filter(
+          const hasPublic = parsed.some((s: AppSource) => s.id === 'src-public-cinema');
+          const baseList = hasPublic ? parsed : [...INITIAL_SOURCES.slice(0, 2), ...parsed];
+          const clean = baseList.filter(
             (s: AppSource) =>
               !s.id.startsWith('src-anime-') &&
               !s.id.startsWith('src-series-') &&
@@ -178,7 +190,7 @@ export default function App() {
   const saveSources = (updated: AppSource[]) => {
     setSources(updated);
     try {
-      localStorage.setItem('cineftp_sources_v8', JSON.stringify(updated));
+      localStorage.setItem('cineftp_sources_v9', JSON.stringify(updated));
     } catch {}
   };
 
