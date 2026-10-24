@@ -1945,7 +1945,7 @@ async function handleRangeStreamProxy(
   const rawRange = req.headers.range;
   let rangeToSend = rawRange;
 
-  const MAX_CHUNK = Math.round(2.5 * 1024 * 1024); // 2.5 MB chunk (strictly under Vercel's 4.5 MB payload limit)
+  const MAX_CHUNK = Math.round(3.5 * 1024 * 1024); // 3.5 MB chunk (optimally fits within Vercel's 4.5 MB payload limit)
   if (rawRange) {
     const match = rawRange.match(/^bytes=(\d+)-(\d*)$/);
     if (match) {
@@ -1958,15 +1958,15 @@ async function handleRangeStreamProxy(
       rangeToSend = `bytes=${start}-${end}`;
     }
   } else {
-    // Initial chunk for instant metadata & ftyp/moov box parsing (2.5 MB)
-    rangeToSend = 'bytes=0-2621439';
+    // Initial chunk for instant metadata & ftyp/moov box parsing (3.5 MB)
+    rangeToSend = 'bytes=0-3670015';
   }
 
   const upstreamHeaders: Record<string, string> = {
     'User-Agent':
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
     Accept: '*/*',
-    Range: rangeToSend || 'bytes=0-2621439',
+    Range: rangeToSend || 'bytes=0-3670015',
   };
 
   const makeProxyRequest = (requestUrl: URL, redirectCount = 0) => {
@@ -1984,7 +1984,7 @@ async function handleRangeStreamProxy(
         method: 'GET',
         headers: upstreamHeaders,
         agent: currentAgent,
-        timeout: 4000,
+        timeout: 15000,
       },
       (upstreamRes) => {
         // Handle HTTP 301/302/307/308 redirects
@@ -2034,7 +2034,7 @@ async function handleRangeStreamProxy(
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
         res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400');
 
         const upstreamContentRange = upstreamRes.headers['content-range'];
         const upstreamContentLength = upstreamRes.headers['content-length'];

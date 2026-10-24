@@ -329,14 +329,31 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     }
 
     // Standard MP4 / M4V / WEBM formats:
-    // Step 0: Same-Origin High-Speed Range Proxy (/api/stream)
-    // Ensures sub-second 206 Partial Content, bypasses missing CORS on remote servers,
-    // and guarantees instant playback inside preview iframes.
+    // If the stream is a public HTTPS stream (e.g. Kozow media CDN):
+    // Step 0: Direct media stream (Instant startup, zero serverless round-trips, native browser pipelining, no stuttering)
+    // Step 1: Same-Origin High-Speed Range Proxy (/api/stream)
+    // Step 2: Alternate Mirror Proxy (if available)
+    // Step 3: Stream Remux Fallback
+    const isDirectCapableHttps = safePlayableUrl.startsWith('https://') && !safePlayableUrl.includes('ftpbd.net');
+
+    if (isDirectCapableHttps) {
+      if (streamFallbackStep === 0) {
+        return safePlayableUrl;
+      }
+      if (streamFallbackStep === 1) {
+        return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
+      }
+      if (streamFallbackStep === 2 && alternateMirrorUrl) {
+        return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
+      }
+      return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
+    }
+
+    // For HTTP or private BDIX streams requiring SSL termination / proxying:
     if (streamFallbackStep === 0) {
       return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
     }
 
-    // Step 1: Direct media stream (if HTTPS or native network allows)
     if (streamFallbackStep === 1) {
       if (!isHttpsOrigin || safePlayableUrl.startsWith('https://')) {
         return safePlayableUrl;
@@ -344,12 +361,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       return `/api/stream?url=${encodeURIComponent(safePlayableUrl)}`;
     }
 
-    // Step 2: Alternate Mirror Proxy (if available)
     if (streamFallbackStep === 2 && alternateMirrorUrl) {
       return `/api/stream?url=${encodeURIComponent(alternateMirrorUrl)}`;
     }
 
-    // Step 3: Stream Remux Fallback (in case audio codec AC3/DTS is unsupported by browser)
     return `/api/transcode?url=${encodeURIComponent(safePlayableUrl)}&audioTrack=${selectedAudioTrack}`;
   }, [
     safePlayableUrl,
@@ -820,8 +835,17 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           }}
           onPlaying={() => setIsBuffering(false)}
           onLoadedData={() => setIsBuffering(false)}
+          onCanPlayThrough={() => setIsBuffering(false)}
           onPause={() => setIsPlaying(false)}
           onWaiting={() => {
+            const v = videoRef.current;
+            if (v && v.buffered && v.buffered.length > 0) {
+              const end = v.buffered.end(v.buffered.length - 1);
+              // If buffer already has > 1.0s ahead, this is a minor timestamp sync; avoid flashing buffer UI
+              if (end - v.currentTime > 1.0) {
+                return;
+              }
+            }
             if (!streamLoadFailed) setIsBuffering(true);
           }}
           onCanPlay={() => {
