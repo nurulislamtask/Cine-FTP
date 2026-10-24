@@ -599,13 +599,31 @@ export function parseDirectoryHtml(
       continue;
     }
 
+    const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1] || '';
+    const hasFileExtension = /\.[a-z0-9]{2,5}$/i.test(lastSegment) && !/\.\d+$/.test(lastSegment);
+    const fileExt = hasFileExtension ? lastSegment.split('.').pop()?.toLowerCase() || '' : '';
+    const isMediaFile = fileExt && (VIDEO_EXTENSIONS.has(fileExt) || SUBTITLE_EXTENSIONS.has(fileExt) || IMAGE_EXTENSIONS.has(fileExt));
+
     if (sameHost && !isRootPath) {
-      if (!resolvedUrl.pathname.startsWith(baseObj.pathname)) {
+      const decodedBase = decodeURIComponent(baseObj.pathname).replace(/\/+$/, '');
+      const decodedTarget = decodeURIComponent(resolvedUrl.pathname);
+
+      // Verify child item is within or relative to the requested directory
+      if (!decodedTarget.startsWith(decodedBase)) {
+        if (!isMediaFile) continue;
+      }
+      const relativePath = decodedTarget.startsWith(decodedBase)
+        ? decodedTarget.slice(decodedBase.length)
+        : decodedTarget;
+      const cleanRelSegments = relativePath.split('/').filter(Boolean);
+
+      // For subfolders, only accept direct 1st-level children to prevent infinite recursion
+      // For media files, allow up to 3 levels deep (e.g. /1080p/movie.mkv or /CD1/movie.mkv or /Subs/en.srt)
+      if (!isMediaFile && cleanRelSegments.length !== 1) {
         continue;
       }
-      const relativePath = resolvedUrl.pathname.slice(baseObj.pathname.length);
-      const cleanRelSegments = relativePath.split('/').filter(Boolean);
-      if (cleanRelSegments.length !== 1) {
+      if (isMediaFile && (cleanRelSegments.length < 1 || cleanRelSegments.length > 3)) {
         continue;
       }
     }
@@ -613,9 +631,6 @@ export function parseDirectoryHtml(
     if (seenUrls.has(resolvedUrl.href)) continue;
     seenUrls.add(resolvedUrl.href);
 
-    const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1] || '';
-    const hasFileExtension = /\.[a-z0-9]{2,5}$/i.test(lastSegment) && !/\.\d+$/.test(lastSegment);
     const isDirectory =
       rawHref.endsWith('/') ||
       resolvedUrl.pathname.endsWith('/') ||

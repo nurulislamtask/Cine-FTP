@@ -372,26 +372,38 @@ export function clearIndexedCache() {
   } catch {}
 }
 
-const PLAYABLE_CACHE_KEY = 'cineftp_playable_links_cache_v3';
+const PLAYABLE_CACHE_KEY = 'cineftp_playable_links_cache_v4';
 const playableLinksCache = new Map<string, string>();
 
 try {
-  // Clear obsolete v2 cache if present to remove any hijacked or corrupted stream links
+  // Clear obsolete v2/v3 caches to permanently wipe any corrupted folder URLs
   localStorage.removeItem('cineftp_playable_links_cache_v2');
+  localStorage.removeItem('cineftp_playable_links_cache_v3');
   const raw = localStorage.getItem(PLAYABLE_CACHE_KEY);
   if (raw) {
     const parsed = JSON.parse(raw);
     for (const [k, v] of Object.entries(parsed)) {
-      if (typeof v === 'string') playableLinksCache.set(k, v);
+      if (typeof v === 'string' && /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(v)) {
+        playableLinksCache.set(k, v);
+      }
     }
   }
 } catch {}
 
 export function getCachedPlayableUrl(idOrUrl: string): string | undefined {
-  return playableLinksCache.get(idOrUrl);
+  const cached = playableLinksCache.get(idOrUrl);
+  if (cached && (cached.endsWith('/') || !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(cached))) {
+    playableLinksCache.delete(idOrUrl);
+    return undefined;
+  }
+  return cached;
 }
 
 export function saveCachedPlayableUrl(idOrUrl: string, streamUrl: string) {
+  // STRICT RULE: Only cache URLs with valid media extensions, NEVER folder URLs
+  if (!streamUrl || streamUrl.endsWith('/') || !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(streamUrl)) {
+    return;
+  }
   try {
     playableLinksCache.set(idOrUrl, streamUrl);
     const obj: Record<string, string> = {};
@@ -1003,12 +1015,16 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     };
   }
 
-  // 2. Only match seed catalog if this item IS that exact seed item (strictly exact ID or exact URL)
+  // 2. Match seed catalog if this item IS that exact seed item or has exact matching clean title
+  const normTitle = folderItem.cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
   const seedMatch = INITIAL_UNIFIED_CATALOG.find(
-    (s) => s.id === folderItem.id || s.url === folderItem.url
+    (s) =>
+      s.id === folderItem.id ||
+      s.url === folderItem.url ||
+      (normTitle.length >= 3 && s.cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '') === normTitle)
   );
 
-  if (seedMatch && !seedMatch.isDirectory && /\.(mp4|mkv|webm)(\?.*)?$/i.test(seedMatch.url)) {
+  if (seedMatch && !seedMatch.isDirectory && /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(seedMatch.url)) {
     saveCachedPlayableUrl(folderItem.id, seedMatch.url);
     saveCachedPlayableUrl(folderItem.url, seedMatch.url);
     const resolvedSeed: ParsedFtpItem = {
@@ -1024,7 +1040,7 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
       subtitles: [],
       folderResult: {
         url: folderItem.url,
-        serverName: folderItem.sourceServerName || 'CineFTP Server',
+        serverName: folderItem.sourceServerName || seedMatch.sourceServerName || 'CineFTP Server',
         pageTitle: folderItem.cleanTitle,
         isH5ai: true,
         isPortalRoot: false,
@@ -1037,21 +1053,24 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     };
   }
 
+  // Ensure folder URL has trailing slash so relative paths resolve inside this folder
+  const targetFolderUrl = folderItem.url.endsWith('/') ? folderItem.url : `${folderItem.url}/`;
+
   let dirResult: DirectoryBrowseResult | null = null;
   try {
-    dirResult = await browseFtpDirectory(folderItem.url);
+    dirResult = await browseFtpDirectory(targetFolderUrl);
   } catch (err) {
     console.warn('Network scan of folder timed out or failed:', err);
   }
 
   const rawItems = dirResult?.items || [];
-  const videos = rawItems.filter(
+  let videos = rawItems.filter(
     (i) =>
       !i.isDirectory &&
       (i.mediaKind === 'movie' ||
         i.mediaKind === 'episode' ||
-        (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v)$/i.test(i.extension)) ||
-        /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(i.url))
+        (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v|flv|wmv|m2ts)$/i.test(i.extension)) ||
+        /\.(mp4|mkv|webm|avi|mov|ts|m4v|flv|wmv|m2ts)(\?.*)?$/i.test(i.url))
   );
   const subtitles = dirResult ? [...dirResult.subtitles] : [];
 
@@ -1066,12 +1085,21 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     } catch {}
   }
 
-  // If no direct video in Level 1 and it might be a series, check series seasons
-  if (videos.length === 0 && folderItem.mediaKind !== 'movie') {
+  // If no direct video in Level 1 and it might be a TV Series or Animation series, check series seasons
+  const isSeriesOrAnimation =
+    folderItem.mediaKind === 'series' ||
+    /series|tv|season|anime|cartoon|episodes/i.test(folderItem.url) ||
+    /series|tv|season|anime|cartoon/i.test(folderItem.rawName);
+
+  if (videos.length === 0 && isSeriesOrAnimation) {
     try {
       const seriesCheck = await crawlSeriesSeasons(folderItem);
       if (seriesCheck.initialEpisodes.length > 0) {
         const firstEp = seriesCheck.initialEpisodes[0];
+        if (/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(firstEp.url)) {
+          saveCachedPlayableUrl(folderItem.id, firstEp.url);
+          saveCachedPlayableUrl(folderItem.url, firstEp.url);
+        }
         return {
           primaryVideo: {
             ...firstEp,
@@ -1087,7 +1115,7 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
           subtitles: seriesCheck.initialSubtitles,
           seasons: seriesCheck.seasons,
           folderResult: dirResult || {
-            url: folderItem.url,
+            url: targetFolderUrl,
             serverName: folderItem.sourceServerName || 'CineFTP',
             pageTitle: folderItem.cleanTitle,
             isH5ai: true,
@@ -1103,98 +1131,164 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     } catch {}
   }
 
-  // If no direct video in Level 1, check non-sample subfolders (e.g., 1080p/ or release subfolder)
-  if (videos.length === 0) {
+  // If no direct video in Level 1, deep-check subfolders (e.g. 1080p/, 720p/, Feature/, CD1/, Movie/)
+  if (videos.length === 0 && rawItems.length > 0) {
     const subDirs = rawItems.filter(
       (i) => i.isDirectory && !/^(subs?|subtitles?|sample|extras?|featurettes?)$/i.test(i.rawName.trim())
     );
-    for (const sd of subDirs.slice(0, 3)) {
+    if (subDirs.length > 0) {
+      await Promise.all(
+        subDirs.slice(0, 6).map(async (sd) => {
+          try {
+            const nestedRes = await browseFtpDirectory(sd.url);
+            const nestedVideos = nestedRes.items.filter(
+              (i) =>
+                !i.isDirectory &&
+                (i.mediaKind === 'movie' ||
+                  i.mediaKind === 'episode' ||
+                  (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v|flv|wmv)$/i.test(i.extension)) ||
+                  /\.(mp4|mkv|webm|avi|mov|ts|m4v|flv|wmv)(\?.*)?$/i.test(i.url))
+            );
+            if (nestedVideos.length > 0) {
+              videos.push(...nestedVideos);
+              subtitles.push(...nestedRes.subtitles);
+            }
+          } catch {}
+        })
+      );
+    }
+  }
+
+  // If still no video found, check sister mirrors across the FTP cluster
+  if (videos.length === 0) {
+    const mirrorCandidates: string[] = [];
+    if (targetFolderUrl.includes('server2.ftpbd.net')) {
+      mirrorCandidates.push(targetFolderUrl.replace('server2.ftpbd.net', 'server3.ftpbd.net'));
+      mirrorCandidates.push(targetFolderUrl.replace('server2.ftpbd.net', 'server5.ftpbd.net'));
+      mirrorCandidates.push(targetFolderUrl.replace('server2.ftpbd.net', 'server4.ftpbd.net'));
+    } else if (targetFolderUrl.includes('server3.ftpbd.net')) {
+      mirrorCandidates.push(targetFolderUrl.replace('server3.ftpbd.net', 'server2.ftpbd.net'));
+      mirrorCandidates.push(targetFolderUrl.replace('server3.ftpbd.net', 'server5.ftpbd.net'));
+    }
+
+    for (const mirrorUrl of mirrorCandidates) {
       try {
-        const nestedRes = await browseFtpDirectory(sd.url);
-        const nestedVideos = nestedRes.items.filter(
+        const mirrorRes = await browseFtpDirectory(mirrorUrl);
+        const mirrorVideos = mirrorRes.items.filter(
           (i) =>
             !i.isDirectory &&
-            (i.mediaKind === 'movie' ||
-              i.mediaKind === 'episode' ||
-              (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v)$/i.test(i.extension)) ||
-              /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(i.url))
+            (/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(i.url) ||
+              (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v)$/i.test(i.extension)))
         );
-        if (nestedVideos.length > 0) {
-          videos.push(...nestedVideos);
-          subtitles.push(...nestedRes.subtitles);
+        if (mirrorVideos.length > 0) {
+          videos.push(...mirrorVideos);
+          subtitles.push(...mirrorRes.subtitles);
           break;
         }
       } catch {}
     }
   }
 
-  // If still no video file found, use the folderItem directly
+  // Synthesize candidate release filenames based on standard BDIX FTP naming conventions
+  const cleanTitleDot = folderItem.cleanTitle.trim().replace(/[\s:_'\-]+/g, '.');
+  const cleanTitleSpace = folderItem.cleanTitle.trim().replace(/[\s:_'\-]+/g, ' ');
+  const yr = folderItem.year || (folderItem.rawName.match(/(?:19|20)\d{2}/) ? parseInt(folderItem.rawName.match(/(?:19|20)\d{2}/)![0], 10) : undefined);
+
   if (videos.length === 0) {
-    const fallbackItem: ParsedFtpItem = {
+    const candidateNames: string[] = [];
+    if (yr) {
+      candidateNames.push(`${cleanTitleDot}.${yr}.1080p.WEBRip.x264.mkv`);
+      candidateNames.push(`${cleanTitleDot}.${yr}.1080p.mkv`);
+      candidateNames.push(`${cleanTitleDot}.${yr}.720p.mkv`);
+      candidateNames.push(`${cleanTitleDot}.${yr}.1080p.mp4`);
+      candidateNames.push(`${cleanTitleDot}.${yr}.mp4`);
+      candidateNames.push(`${cleanTitleDot}.${yr}.mkv`);
+      candidateNames.push(`${cleanTitleSpace} (${yr}).mkv`);
+      candidateNames.push(`${cleanTitleSpace} (${yr}).mp4`);
+    }
+    candidateNames.push(`${cleanTitleDot}.1080p.mkv`);
+    candidateNames.push(`${cleanTitleDot}.mp4`);
+    candidateNames.push(`${cleanTitleDot}.mkv`);
+    candidateNames.push(`${cleanTitleSpace}.mkv`);
+    candidateNames.push(`${cleanTitleSpace}.mp4`);
+
+    // Pick top synthesized candidate
+    const primaryCandidateUrl = `${targetFolderUrl}${encodeURIComponent(candidateNames[0])}`;
+    const syntheticItem: ParsedFtpItem = {
       ...folderItem,
-      id: folderItem.url,
-      url: folderItem.url,
+      id: primaryCandidateUrl,
+      url: primaryCandidateUrl,
       isDirectory: false,
-      mediaKind: 'movie',
+      mediaKind: isSeriesOrAnimation ? 'series' : 'movie',
+      extension: 'mkv',
     };
 
+    saveCachedPlayableUrl(folderItem.id, primaryCandidateUrl);
+    saveCachedPlayableUrl(folderItem.url, primaryCandidateUrl);
+
     return {
-      primaryVideo: fallbackItem,
-      allVideos: [fallbackItem],
+      primaryVideo: syntheticItem,
+      allVideos: [syntheticItem],
       subtitles,
       folderResult: dirResult || {
-        url: folderItem.url,
+        url: targetFolderUrl,
         serverName: folderItem.sourceServerName || 'CineFTP Server',
         pageTitle: folderItem.cleanTitle,
         isH5ai: true,
         isPortalRoot: false,
         parentUrl: null,
         breadcrumbs: [],
-        items: [fallbackItem],
+        items: [syntheticItem],
         subtitles: [],
         fetchedVia: 'backend',
       },
     };
   }
 
-  const hasEpisodes = videos.some((v) => v.episode !== undefined);
+  // Filter out any small sample files (< 30 MB) if a full video exists
+  const fullVideos = videos.filter((v) => !/sample/i.test(v.rawName) || (v.sizeBytes && v.sizeBytes > 40 * 1024 * 1024));
+  const finalVideos = fullVideos.length > 0 ? fullVideos : videos;
+
+  const hasEpisodes = finalVideos.some((v) => v.episode !== undefined);
   if (hasEpisodes) {
-    videos.sort((a, b) => {
+    finalVideos.sort((a, b) => {
       if (a.season !== b.season) return (a.season || 1) - (b.season || 1);
       if (a.episode !== b.episode) return (a.episode || 0) - (b.episode || 0);
       return a.rawName.localeCompare(b.rawName, undefined, { numeric: true });
     });
   } else {
-    videos.sort((a, b) => (b.sizeBytes || 0) - (a.sizeBytes || 0));
+    finalVideos.sort((a, b) => (b.sizeBytes || 0) - (a.sizeBytes || 0));
   }
 
   const primaryVideo: ParsedFtpItem = {
-    ...videos[0],
-    posterUrl: videos[0].posterUrl || dirResult?.localPosterUrl || folderItem.posterUrl,
-    backdropUrl: folderItem.backdropUrl || videos[0].backdropUrl,
+    ...finalVideos[0],
+    posterUrl: finalVideos[0].posterUrl || dirResult?.localPosterUrl || folderItem.posterUrl,
+    backdropUrl: folderItem.backdropUrl || finalVideos[0].backdropUrl,
     imdbRating: folderItem.imdbRating,
     plot: folderItem.plot,
     cast: folderItem.cast,
     genres: folderItem.genres,
-    year: videos[0].year || folderItem.year,
+    year: finalVideos[0].year || folderItem.year,
   };
 
-  saveCachedPlayableUrl(folderItem.id, primaryVideo.url);
-  saveCachedPlayableUrl(folderItem.url, primaryVideo.url);
+  if (/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(primaryVideo.url)) {
+    saveCachedPlayableUrl(folderItem.id, primaryVideo.url);
+    saveCachedPlayableUrl(folderItem.url, primaryVideo.url);
+  }
 
   return {
     primaryVideo,
-    allVideos: videos,
+    allVideos: finalVideos,
     subtitles,
     folderResult: dirResult || {
-      url: folderItem.url,
+      url: targetFolderUrl,
       serverName: folderItem.sourceServerName || 'CineFTP Server',
       pageTitle: folderItem.cleanTitle,
       isH5ai: true,
       isPortalRoot: false,
       parentUrl: null,
       breadcrumbs: [],
-      items: videos,
+      items: finalVideos,
       subtitles,
       fetchedVia: 'backend',
     },

@@ -549,19 +549,35 @@ function parseDirectoryHtml(
 
     if (!sameHost && !isSisterCluster && !isRootPath) continue;
 
+    const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1] || '';
+    const hasFileExtension = /\.[a-z0-9]{2,5}$/i.test(lastSegment) && !/\.\d+$/.test(lastSegment);
+    const fileExt = hasFileExtension ? lastSegment.split('.').pop()?.toLowerCase() || '' : '';
+    const isMediaFile = fileExt && (VIDEO_EXTENSIONS.has(fileExt) || SUBTITLE_EXTENSIONS.has(fileExt) || IMAGE_EXTENSIONS.has(fileExt));
+
     if (sameHost && !isRootPath) {
-      if (!resolvedUrl.pathname.startsWith(baseObj.pathname)) continue;
-      const relativePath = resolvedUrl.pathname.slice(baseObj.pathname.length);
+      const decodedBase = decodeURIComponent(baseObj.pathname).replace(/\/+$/, '');
+      const decodedTarget = decodeURIComponent(resolvedUrl.pathname);
+
+      if (!decodedTarget.startsWith(decodedBase)) {
+        if (!isMediaFile) continue;
+      }
+      const relativePath = decodedTarget.startsWith(decodedBase)
+        ? decodedTarget.slice(decodedBase.length)
+        : decodedTarget;
       const cleanRelSegments = relativePath.split('/').filter(Boolean);
-      if (cleanRelSegments.length !== 1) continue;
+
+      if (!isMediaFile && cleanRelSegments.length !== 1) {
+        continue;
+      }
+      if (isMediaFile && (cleanRelSegments.length < 1 || cleanRelSegments.length > 3)) {
+        continue;
+      }
     }
 
     if (seenUrls.has(resolvedUrl.href)) continue;
     seenUrls.add(resolvedUrl.href);
 
-    const pathSegments = resolvedUrl.pathname.split('/').filter(Boolean);
-    const lastSegment = pathSegments[pathSegments.length - 1] || '';
-    const hasFileExtension = /\.[a-z0-9]{2,5}$/i.test(lastSegment) && !/\.\d+$/.test(lastSegment);
     const isDirectory =
       rawHref.endsWith('/') ||
       resolvedUrl.pathname.endsWith('/') ||
@@ -1618,8 +1634,8 @@ app.get(['/api/browse', '/browse'], async (req, res) => {
     if (effectiveTargetUrl.includes('server2.ftpbd.net')) {
       if (Date.now() > server2DownUntil) {
         try {
-          const { text, finalUrl } = await fetchSingleUrlText(effectiveTargetUrl, {
-            timeoutMs: 7000,
+          const { text, finalUrl } = await fetchUrlText(effectiveTargetUrl, {
+            timeoutMs: 8000,
           });
           const result = parseDirectoryHtml(text, finalUrl, effectiveVia);
           if (result.items.length > 0) {
@@ -1628,7 +1644,7 @@ app.get(['/api/browse', '/browse'], async (req, res) => {
             return;
           }
         } catch {
-          server2DownUntil = Date.now() + 30 * 1000;
+          server2DownUntil = Date.now() + 20 * 1000;
         }
       }
 
@@ -2013,8 +2029,24 @@ async function handleRangeStreamProxy(
           return;
         }
 
-        const ext = requestUrl.pathname.split('.').pop()?.toLowerCase();
-        let contentType = upstreamRes.headers['content-type'];
+        const ext = requestUrl.pathname.split('.').pop()?.toLowerCase() || '';
+        let contentType = upstreamRes.headers['content-type'] || '';
+
+        // If upstream responded with an HTML page or directory listing, do NOT stream it as video
+        if (contentType.includes('text/html') && !VIDEO_EXTENSIONS.has(ext)) {
+          if (!res.headersSent) {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.status(400).json({
+              error: 'Cannot stream folder or HTML index page as video media. Please resolve playable video file.',
+              targetUrl,
+            });
+          }
+          try {
+            upstreamReq.destroy();
+          } catch {}
+          return;
+        }
+
         if (!contentType || contentType === 'application/octet-stream' || contentType.includes('text/html')) {
           if (ext === 'mp4' || ext === 'm4v') contentType = 'video/mp4';
           else if (ext === 'mkv') contentType = 'video/mp4';

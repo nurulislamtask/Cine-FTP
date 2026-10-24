@@ -270,21 +270,29 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       .then((playable) => {
         if (cancelled) return;
         setIsResolvingFolder(false);
-        if (playable && playable.primaryVideo && playable.primaryVideo.url) {
-          saveCachedPlayableUrl(video.id, playable.primaryVideo.url);
-          saveCachedPlayableUrl(video.url, playable.primaryVideo.url);
-          setOverrideVideoUrl(playable.primaryVideo.url);
+        const resolvedUrl = playable?.primaryVideo?.url;
+        const isValidMedia =
+          resolvedUrl &&
+          !resolvedUrl.endsWith('/') &&
+          /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(resolvedUrl);
+
+        if (isValidMedia) {
+          saveCachedPlayableUrl(video.id, resolvedUrl);
+          saveCachedPlayableUrl(video.url, resolvedUrl);
+          setOverrideVideoUrl(resolvedUrl);
           setStreamFallbackStep(0);
           setIsBuffering(true);
         } else {
-          setFolderResolutionError('Scanning folder for playable stream...');
+          setFolderResolutionError('Scanning FTP mirrors for stream...');
           setIsBuffering(false);
+          setStreamLoadFailed(true);
         }
       })
       .catch(() => {
         if (cancelled) return;
         setIsResolvingFolder(false);
         setIsBuffering(false);
+        setStreamLoadFailed(true);
       });
 
     return () => {
@@ -329,16 +337,30 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
   }, [safePlayableUrl]);
 
   const isTargetFolder =
-    video.isDirectory ||
-    rawVideoUrl.endsWith('/') ||
-    !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(rawVideoUrl);
+    safePlayableUrl.endsWith('/') ||
+    !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(safePlayableUrl);
 
   const isMkvOrUnsupported = useMemo(() => {
     return /\.(mkv|avi|ts|m2ts|flv|wmv|vob)(\?.*)?$/i.test(safePlayableUrl);
   }, [safePlayableUrl]);
 
+  // Fast auto-fallback: if direct stream doesn't play within 3 seconds, switch to proxy
+  useEffect(() => {
+    if (streamFallbackStep === 0 && isBuffering && !isResolvingFolder && !isTargetFolder) {
+      const timer = window.setTimeout(() => {
+        if (isBuffering && currentTime === 0 && fallbackAttemptsRef.current < 2) {
+          fallbackAttemptsRef.current += 1;
+          setStreamFallbackStep(1);
+          setIsBuffering(true);
+        }
+      }, 3000);
+      return () => window.clearTimeout(timer);
+    }
+  }, [streamFallbackStep, isBuffering, isResolvingFolder, isTargetFolder, currentTime]);
+
   const streamUrl = useMemo(() => {
-    if (isResolvingFolder || (isTargetFolder && !overrideVideoUrl)) {
+    // If the URL is a folder or still resolving, NEVER send it to <video>
+    if (isResolvingFolder || isTargetFolder) {
       return '';
     }
 
@@ -1063,12 +1085,17 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
         )}
 
         {/* Folder Resolving Indicator */}
-        {isResolvingFolder && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
-            <div className="w-12 h-12 border-3 border-[#E50914] border-t-transparent rounded-full animate-spin shadow-lg" />
-            <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
-              Resolving media stream...
-            </span>
+        {(isResolvingFolder || (isTargetFolder && !overrideVideoUrl)) && !streamLoadFailed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-30 bg-black/80 backdrop-blur-sm px-4">
+            <div className="w-12 h-12 border-3 border-[#E50914] border-t-transparent rounded-full animate-spin shadow-2xl" />
+            <div className="flex flex-col items-center gap-1.5 text-center">
+              <span className="text-sm font-semibold text-white/95 tracking-wide">
+                Finding stream for "{video.cleanTitle}"...
+              </span>
+              <span className="text-xs text-zinc-400">
+                Scanning FTP mirrors and locating high-speed media stream
+              </span>
+            </div>
           </div>
         )}
 
