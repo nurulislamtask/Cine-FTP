@@ -401,6 +401,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     if (!streamUrl || streamLoadFailed) return;
     if (!isBuffering && isPlaying) return;
 
+    const timeoutDuration = streamFallbackStep === 0 ? 3800 : 10000;
     const timer = window.setTimeout(() => {
       const v = videoRef.current;
       // If still stuck buffering with no playable frames (readyState < 2)
@@ -422,7 +423,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           setStreamLoadFailed(true);
         }
       }
-    }, 15000);
+    }, timeoutDuration);
 
     return () => window.clearTimeout(timer);
   }, [streamUrl, streamFallbackStep, isBuffering, isPlaying, streamLoadFailed, showToast, isMkvOrUnsupported]);
@@ -964,13 +965,30 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
 
         {/* Clean Buffering Spinner */}
         {isBuffering && !isResolvingFolder && streamUrl && !streamLoadFailed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-3 z-20">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-20 pointer-events-auto">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
-            <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
-              {streamFallbackStep === 0
-                ? 'Connecting direct stream...'
-                : 'Loading proxy stream...'}
-            </span>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
+                {streamFallbackStep === 0
+                  ? 'Connecting direct stream...'
+                  : 'Loading proxy stream...'}
+              </span>
+              {streamFallbackStep === 0 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fallbackAttemptsRef.current += 1;
+                    setStreamFallbackStep(1);
+                    setIsBuffering(true);
+                    showToast('Switched to range stream proxy...');
+                  }}
+                  className="text-[11px] font-medium text-amber-400 hover:text-amber-300 bg-black/80 hover:bg-black px-3.5 py-1 rounded-full border border-amber-500/30 cursor-pointer shadow transition-all hover:scale-105"
+                >
+                  ⚡ Slow network? Switch to Proxy Stream
+                </button>
+              )}
+            </div>
           </div>
         )}
 

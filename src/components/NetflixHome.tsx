@@ -68,74 +68,74 @@ export const FEATURED_SPOTLIGHT_SETS: { name: string; tag: string; movies: Featu
     tag: 'Hollywood Premieres',
     movies: [
       {
-        id: 'feat-dune-2',
-        cleanTitle: 'Dune: Part Two',
-        year: 2024,
-        imdbRating: '8.8',
-        quality: '4K Ultra HD • IMAX',
-        audioTag: 'Dolby Atmos 7.1',
-        genres: ['Sci-Fi', 'Action', 'Adventure'],
-        plot: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family, facing a choice between love and the fate of the universe.',
+        id: 'feat-dune',
+        cleanTitle: 'Dune',
+        year: 2021,
+        imdbRating: '8.0',
+        quality: '1080p WEBRip • 5.1',
+        audioTag: 'Dolby Atmos 5.1',
+        genres: ['Action', 'Adventure', 'Sci-Fi'],
+        plot: "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people.",
         backdropUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80',
         thumbUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 46m',
+        runtime: '2h 35m',
         streamUrl: 'https://www.fradgify.kozow.com/media/movies/Dune%20(2021)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Dune.2021.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
       },
       {
-        id: 'feat-deadpool-wolverine',
-        cleanTitle: 'Deadpool & Wolverine',
-        year: 2024,
-        imdbRating: '7.9',
-        quality: '4K Ultra HD • HDR10',
-        audioTag: 'Dual Audio (5.1)',
-        genres: ['Action', 'Comedy', 'Sci-Fi'],
-        plot: 'Deadpool is pulled from his quiet life by the Time Variance Authority and teams up with a cynical Wolverine on a mission that will change the history of the cinematic universe.',
-        backdropUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 07m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Anora%20(2024)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Anora.2024.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+        id: 'feat-the-matrix',
+        cleanTitle: 'The Matrix',
+        year: 1999,
+        imdbRating: '8.7',
+        quality: '720p HD • YIFY',
+        audioTag: 'English 5.1',
+        genres: ['Action', 'Sci-Fi'],
+        plot: 'When a beautiful stranger leads computer hacker Neo to a forbidding underworld, he discovers the shocking truth: the life he knows is the elaborate deception of an evil cyber-intelligence.',
+        backdropUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 16m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The_Matrix_1999.720p_Brrip_x264-YIFY/The.Matrix.1999.720p.BrRip.264.YIFY.mp4',
       },
       {
-        id: 'feat-gladiator-2',
-        cleanTitle: 'Gladiator II',
-        year: 2025,
-        imdbRating: '8.2',
-        quality: '4K Ultra HD • IMAX',
-        audioTag: 'Dolby Atmos',
-        genres: ['Action', 'Adventure', 'Drama'],
-        plot: 'Years after witnessing the death of Maximus, Lucius must enter the Colosseum after his home is conquered by tyrannical emperors who rule Rome with an iron fist.',
-        backdropUrl: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 28m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Ballad%20Of%20Wallis%20Island%20(2025)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/The.Ballad.Of.Wallis.Island.2025.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-avatar-water',
-        cleanTitle: 'Avatar: The Way of Water',
-        year: 2024,
-        imdbRating: '8.1',
-        quality: '4K Ultra HD • HDR',
-        audioTag: 'Dolby Digital Plus 5.1',
-        genres: ['Action', 'Sci-Fi', 'Fantasy'],
-        plot: 'Jake Sully lives with his newfound family on the extrasolar moon Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri to protect their home.',
-        backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
-        runtime: '3h 12m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Arrival%20(2016)%20%5b1080p%5d%20%5bYTS.AG%5d/Arrival.2016.1080p.BluRay.x264-%5bYTS.AG%5d.mp4',
-      },
-      {
-        id: 'feat-furiosa',
-        cleanTitle: 'Furiosa: A Mad Max Saga',
-        year: 2024,
-        imdbRating: '7.7',
-        quality: '1080p BluRay • HDR',
-        audioTag: 'Atmos • Dual Audio',
-        genres: ['Action', 'Adventure', 'Sci-Fi'],
-        plot: 'The origin story of renegade warrior Furiosa before her encounter and teamup with Mad Max in Fury Road.',
+        id: 'feat-world-war-z',
+        cleanTitle: 'World War Z',
+        year: 2013,
+        imdbRating: '7.0',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Action', 'Adventure', 'Horror', 'Sci-Fi'],
+        plot: 'Former United Nations employee Gerry Lane traverses the world in a race against time to stop a zombie pandemic that is toppling armies and governments and threatening humanity.',
         backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1600&auto=format&fit=crop&q=80',
         thumbUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 28m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Magic%20Faraway%20Tree%20(2026)%20%5b1080p%5d%20%5bWEBRip%5d%20%5bYTS.BZ%5d/The.Magic.Faraway.Tree.2026.1080p.WEBRip.x264.AAC-%5bYTS.BZ%5d.mp4',
+        runtime: '1h 56m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/World%20War%20Z%20(2013)%20%5b1080p%5d/World.War.Z.2013.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-v-for-vendetta',
+        cleanTitle: 'V for Vendetta',
+        year: 2006,
+        imdbRating: '8.2',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Action', 'Drama', 'Sci-Fi'],
+        plot: 'In a future British dystopian tyranny, a shadowy freedom fighter known only as V uses guerrilla tactics to fight the oppressive regime and liberate the people.',
+        backdropUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 12m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/V%20for%20Vendetta%20(2006)%20%5b1080p%5d/V.For.Vendetta.2006.1080p.BrRip.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-arrival',
+        cleanTitle: 'Arrival',
+        year: 2016,
+        imdbRating: '7.9',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama', 'Mystery', 'Sci-Fi'],
+        plot: 'A linguist is tasked by the military with translating the alien language after twelve mysterious extraterrestrial spacecraft appear around the globe.',
+        backdropUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 56m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Arrival%20(2016)%20%5b1080p%5d%20%5bYTS.AG%5d/Arrival.2016.1080p.BluRay.x264-%5bYTS.AG%5d.mp4',
       },
     ],
   },
@@ -211,311 +211,311 @@ export const FEATURED_SPOTLIGHT_SETS: { name: string; tag: string; movies: Featu
         backdropUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&fit=crop&q=80',
         thumbUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80',
         runtime: '8 Episodes',
-        streamUrl: 'https://www.fradgify.kozow.com/media/tv/Chernobyl.COMPLETE.Season.1.S01.1080p/Chernobyl.S01E02.Please.Remain.Calm.1080p.AMZN.WEB-DL.x265-HETeam.mkv',
+        streamUrl: 'https://www.fradgify.kozow.com/media/tv/Silicon.Valley.S01.1080p/Silicon.Valley.S01E01.Minimum.Viable.Product.1080p.BluRay.x265.10bit.AAC.5.1-ImE%5bUTR%5d.mkv',
       },
     ],
   },
   {
-    name: 'Mega Indian & South Cinema Hits',
-    tag: 'Bollywood & Tollywood',
+    name: 'Critically Acclaimed Masterpieces & Oscar Winners',
+    tag: 'Cinema Icons',
     movies: [
       {
-        id: 'feat-kalki',
-        cleanTitle: 'Kalki 2898 AD',
-        year: 2024,
+        id: 'feat-wolf-of-wall-street',
+        cleanTitle: 'The Wolf of Wall Street',
+        year: 2013,
         imdbRating: '8.2',
-        quality: '4K Ultra HD • IMAX',
-        audioTag: 'Dolby Atmos • Dual Audio',
-        genres: ['Sci-Fi', 'Action', 'Mythology'],
-        plot: 'A modern avatar of Vishnu descends to Earth in a dystopian post-apocalyptic future to protect the world from sinister dark forces.',
-        backdropUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80',
-        runtime: '3h 01m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Dune%20(2021)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Dune.2021.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-fighter',
-        cleanTitle: 'Fighter',
-        year: 2024,
-        imdbRating: '7.8',
         quality: '1080p BluRay',
-        audioTag: 'Dolby 5.1 (Hindi Original)',
-        genres: ['Action', 'Thriller', 'War'],
-        plot: 'Top IAF aviators face imminent danger and internal conflicts while on a high-stakes aerial counter-terror operation.',
-        backdropUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4ea16e872?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4ea16e872?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 46m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Ballad%20Of%20Wallis%20Island%20(2025)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/The.Ballad.Of.Wallis.Island.2025.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-salaar',
-        cleanTitle: 'Salaar: Part 1 – Ceasefire',
-        year: 2024,
-        imdbRating: '8.1',
-        quality: '1080p WEB-DL',
-        audioTag: 'Hindi Dubbed 5.1',
-        genres: ['Action', 'Crime', 'Drama'],
-        plot: 'A gang leader makes a solemn promise to a dying friend and takes on rival criminal syndicates in the lawless city of Khansaar.',
-        backdropUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 55m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/World%20War%20Z%20(2013)%20%5b1080p%5d/World.War.Z.2013.1080p.BluRay.x264.YIFY.mp4',
-      },
-      {
-        id: 'feat-water-2005',
-        cleanTitle: 'Water',
-        year: 2005,
-        imdbRating: '7.8',
-        quality: '1080p BluRay',
-        audioTag: 'Hindi • DD 5.1 Audio',
-        genres: ['Drama', 'Romance'],
-        plot: 'Deepa Mehta\'s critically acclaimed masterpiece examining faith, freedom, and love amidst social transformation in 1930s Varanasi.',
-        backdropUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 57m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Arrival%20(2016)%20%5b1080p%5d%20%5bYTS.AG%5d/Arrival.2016.1080p.BluRay.x264-%5bYTS.AG%5d.mp4',
-      },
-      {
-        id: 'feat-jawan',
-        cleanTitle: 'Jawan',
-        year: 2023,
-        imdbRating: '8.0',
-        quality: '1080p BluRay',
-        audioTag: 'Dolby Atmos 5.1',
-        genres: ['Action', 'Thriller'],
-        plot: 'A high-octane emotional journey of a prison warden driven by a personal vendetta to right the wrongs of systemic injustice.',
-        backdropUrl: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 49m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Wolf%20of%20Wall%20Street%20(2013)%20%5b1080p%5d/The.Wolf.of.Wall.Street.2013.1080p.BluRay.x264.YIFY.mp4',
-      },
-    ],
-  },
-  {
-    name: 'Animation & Animated Adventures',
-    tag: 'Animated Sensations',
-    movies: [
-      {
-        id: 'feat-wild-robot',
-        cleanTitle: 'The Wild Robot',
-        year: 2024,
-        imdbRating: '8.5',
-        quality: '4K Ultra HD',
-        audioTag: 'Dolby Atmos • Dual Audio',
-        genres: ['Animation', 'Adventure', 'Family'],
-        plot: 'After a shipwreck, an intelligent robot named Roz is stranded on an uninhabited island and bonds with the island\'s animals while caring for an orphaned gosling.',
+        audioTag: 'Dolby 5.1',
+        genres: ['Biography', 'Comedy', 'Crime'],
+        plot: 'Based on the true story of Jordan Belfort, from his rise to a wealthy stock-broker living the high life to his fall involving crime, corruption and the federal government.',
         backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=80',
         thumbUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 42m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Fantastic%20Mr%20Fox%20(2009)%20%5b1080p%5d/Fantastic.Mr.Fox.2009.1080p.BrRip.x264.YIFY.mp4',
-      },
-      {
-        id: 'feat-inside-out-2',
-        cleanTitle: 'Inside Out 2',
-        year: 2024,
-        imdbRating: '8.0',
-        quality: '1080p BluRay',
-        audioTag: 'Dual Audio (Hindi + English)',
-        genres: ['Animation', 'Comedy', 'Family'],
-        plot: 'Joy, Sadness, Anger, Fear and Disgust face unexpected headquarters renovations to make room for brand new emotions including Anxiety and Envy.',
-        backdropUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 36m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Surfs%20Up%20(2007)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Surfs.Up.2007.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-kungfu-panda-4',
-        cleanTitle: 'Kung Fu Panda 4',
-        year: 2024,
-        imdbRating: '7.6',
-        quality: '1080p WEB-DL',
-        audioTag: 'Dual Audio',
-        genres: ['Animation', 'Action', 'Adventure'],
-        plot: 'Po must train a new Dragon Warrior while battling The Chameleon, a shapeshifting sorceress summoning villainous spirits from the spirit realm.',
-        backdropUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 34m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Magic%20Faraway%20Tree%20(2026)%20%5b1080p%5d%20%5bWEBRip%5d%20%5bYTS.BZ%5d/The.Magic.Faraway.Tree.2026.1080p.WEBRip.x264.AAC-%5bYTS.BZ%5d.mp4',
-      },
-      {
-        id: 'feat-spider-verse',
-        cleanTitle: 'Spider-Man: Across the Spider-Verse',
-        year: 2023,
-        imdbRating: '8.7',
-        quality: '4K Ultra HD',
-        audioTag: 'Dolby Atmos 7.1',
-        genres: ['Animation', 'Action', 'Sci-Fi'],
-        plot: 'Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.',
-        backdropUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 20m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The_Matrix_1999.720p_Brrip_x264-YIFY/The.Matrix.1999.720p.BrRip.264.YIFY.mp4',
-      },
-      {
-        id: 'feat-despicable-me-4',
-        cleanTitle: 'Despicable Me 4',
-        year: 2024,
-        imdbRating: '7.5',
-        quality: '1080p BluRay',
-        audioTag: 'Dual Audio (5.1)',
-        genres: ['Animation', 'Comedy', 'Family'],
-        plot: 'Gru welcomes a new family member while going on the run from old nemesis Maxime Le Mal with the assistance of the Mega Minions.',
-        backdropUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 35m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Whiplash%20(2014)%20%5b1080p%5d/Whiplash.2014.1080p.BluRay.x264.YIFY.mp4',
-      },
-    ],
-  },
-  {
-    name: 'Critically Acclaimed Masterpieces',
-    tag: 'Award Winners & Thrillers',
-    movies: [
-      {
-        id: 'feat-oppenheimer',
-        cleanTitle: 'Oppenheimer',
-        year: 2024,
-        imdbRating: '8.9',
-        quality: '4K Ultra HD • 60fps',
-        audioTag: 'DTS-HD Master 5.1',
-        genres: ['Biography', 'Drama', 'History'],
-        plot: 'The story of J. Robert Oppenheimer, the theoretical physicist who led the Manhattan Project and developed the first nuclear weapons that changed human history forever.',
-        backdropUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=300&auto=format&fit=crop&q=80',
         runtime: '3h 00m',
         streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Wolf%20of%20Wall%20Street%20(2013)%20%5b1080p%5d/The.Wolf.of.Wall.Street.2013.1080p.BluRay.x264.YIFY.mp4',
       },
       {
-        id: 'feat-alien-romulus',
-        cleanTitle: 'Alien: Romulus',
-        year: 2024,
-        imdbRating: '7.4',
+        id: 'feat-whiplash',
+        cleanTitle: 'Whiplash',
+        year: 2014,
+        imdbRating: '8.5',
         quality: '1080p BluRay',
-        audioTag: 'Dolby Atmos • Dual Audio',
-        genres: ['Sci-Fi', 'Horror', 'Thriller'],
-        plot: 'Young space colonists scavenging an abandoned space station come face to face with the most terrifying and lethal life form in the universe.',
-        backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 59m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Asteroid%20City%20(2023)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Asteroid.City.2023.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama', 'Music'],
+        plot: "A promising young drummer enrolls at a cut-throat music conservatory where his dreams of greatness are mentored by an instructor who will stop at nothing to realize a student's potential.",
+        backdropUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 46m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Whiplash%20(2014)%20%5b1080p%5d/Whiplash.2014.1080p.BluRay.x264.YIFY.mp4',
       },
       {
-        id: 'feat-civil-war',
-        cleanTitle: 'Civil War',
-        year: 2024,
-        imdbRating: '7.6',
-        quality: '1080p WEB-DL',
+        id: 'feat-the-truman-show',
+        cleanTitle: 'The Truman Show',
+        year: 1998,
+        imdbRating: '8.2',
+        quality: '1080p BluRay',
         audioTag: 'Dolby 5.1',
-        genres: ['Action', 'Drama', 'Thriller'],
-        plot: 'A journey across a dystopian future America, following a team of military-embedded journalists as they race against time to reach DC.',
+        genres: ['Comedy', 'Drama', 'Sci-Fi'],
+        plot: 'An insurance salesman discovers his whole life is actually a reality TV show broadcast live to the entire world 24/7.',
+        backdropUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 43m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Truman%20Show%20(1998)%20%5b1080p%5d/The.Truman.Show.1998.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-the-big-short',
+        cleanTitle: 'The Big Short',
+        year: 2015,
+        imdbRating: '7.8',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Biography', 'Comedy', 'Drama'],
+        plot: 'In 2006-2007 a group of savvy investors betting against the United States mortgage market discover how flawed and corrupt the system is.',
+        backdropUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 10m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Big%20Short%20(2015)%20%5b1080p%5d%20%5bYTS.AG%5d/The.Big.Short.2015.1080p.BluRay.x264-%5bYTS.AG%5d.mp4',
+      },
+      {
+        id: 'feat-children-of-men',
+        cleanTitle: 'Children of Men',
+        year: 2006,
+        imdbRating: '7.9',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Action', 'Drama', 'Sci-Fi'],
+        plot: 'In 2027, in a chaotic world in which women have become mysteriously infertile, a former activist agrees to help transport a miraculously pregnant woman to a sanctuary at sea.',
         backdropUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=1600&auto=format&fit=crop&q=80',
         thumbUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=300&auto=format&fit=crop&q=80',
         runtime: '1h 49m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Ballad%20Of%20Wallis%20Island%20(2025)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/The.Ballad.Of.Wallis.Island.2025.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-twisters',
-        cleanTitle: 'Twisters',
-        year: 2024,
-        imdbRating: '7.5',
-        quality: '1080p BluRay',
-        audioTag: 'Dolby Atmos',
-        genres: ['Action', 'Adventure', 'Thriller'],
-        plot: 'Kate Cooper, a former storm chaser haunted by a devastating encounter with a tornado, is lured back to the open plains by her friend Javi to test a groundbreaking new tracking system.',
-        backdropUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 02m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Magic%20Faraway%20Tree%20(2026)%20%5b1080p%5d%20%5bWEBRip%5d%20%5bYTS.BZ%5d/The.Magic.Faraway.Tree.2026.1080p.WEBRip.x264.AAC-%5bYTS.BZ%5d.mp4',
-      },
-      {
-        id: 'feat-jiaoren',
-        cleanTitle: 'Jiaoren of the South China Sea',
-        year: 2021,
-        imdbRating: '7.6',
-        quality: '1080p WEB-DL',
-        audioTag: 'Dual Audio (Hindi + Chinese)',
-        genres: ['Action', 'Fantasy', 'Adventure'],
-        plot: 'Deep in the mysterious oceanic waters of the South China Sea, adventurers brave mythical aquatic creatures and sunken treasures.',
-        backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
-        runtime: '1h 38m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Truman%20Show%20(1998)%20%5b1080p%5d/The.Truman.Show.1998.1080p.BluRay.x264.YIFY.mp4',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Children%20of%20Men%20(2006)%20%5b1080p%5d/Children.of.Men.2006.1080p.BrRip.x264.BOKUTOX.YIFY.mp4',
       },
     ],
   },
   {
-    name: 'All-Time Fan Classics & Epic Series',
-    tag: 'Timeless Cinema',
+    name: 'Festival Champions & Modern Drama',
+    tag: 'Award Winners',
     movies: [
       {
-        id: 'feat-interstellar',
-        cleanTitle: 'Interstellar',
-        year: 2014,
-        imdbRating: '8.7',
-        quality: '4K Ultra HD • IMAX',
-        audioTag: 'DTS-HD 5.1 • Dual Audio',
-        genres: ['Sci-Fi', 'Adventure', 'Drama'],
-        plot: 'When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft along with a team of researchers to find a new planet for humans.',
-        backdropUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 49m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Arrival%20(2016)%20%5b1080p%5d%20%5bYTS.AG%5d/Arrival.2016.1080p.BluRay.x264-%5bYTS.AG%5d.mp4',
-      },
-      {
-        id: 'feat-topgun-maverick',
-        cleanTitle: 'Top Gun: Maverick',
-        year: 2022,
-        imdbRating: '8.3',
-        quality: '4K Ultra HD • HDR',
-        audioTag: 'Dolby Atmos 7.1',
-        genres: ['Action', 'Drama'],
-        plot: 'After thirty years, Maverick is still pushing the envelope as a top naval aviator, but must confront ghosts of his past when he leads TOP GUN\'s elite graduates on an impossible mission.',
-        backdropUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4ea16e872?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4ea16e872?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 10m',
-        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Poor%20Things%20(2023)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Poor.Things.2023.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
-      },
-      {
-        id: 'feat-batman',
-        cleanTitle: 'The Batman',
-        year: 2022,
-        imdbRating: '7.8',
-        quality: '4K Ultra HD',
-        audioTag: 'Dolby Atmos',
-        genres: ['Action', 'Crime', 'Drama'],
-        plot: 'When a sadistic serial killer begins murdering key political figures in Gotham, the Batman is forced to investigate the city\'s hidden corruption.',
-        backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
-        runtime: '2h 56m',
+        id: 'feat-anora',
+        cleanTitle: 'Anora',
+        year: 2024,
+        imdbRating: '8.0',
+        quality: '1080p WEBRip',
+        audioTag: 'Dolby 5.1',
+        genres: ['Comedy', 'Drama', 'Romance'],
+        plot: 'A young sex worker from Brooklyn gets her chance at a Cinderella story when she meets and marries the son of an oligarch.',
+        backdropUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 19m',
         streamUrl: 'https://www.fradgify.kozow.com/media/movies/Anora%20(2024)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Anora.2024.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
       },
       {
-        id: 'feat-where-stars-land',
-        cleanTitle: 'Where Stars Land',
-        year: 2018,
-        imdbRating: '8.2',
-        quality: '1080p HDTV',
-        audioTag: 'Dual Audio',
-        genres: ['Romance', 'Drama', 'Mystery'],
-        plot: 'Heartwarming romantic story centered on the passenger service department of Incheon International Airport.',
-        backdropUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&auto=format&fit=crop&q=80',
-        runtime: '16 Episodes',
-        streamUrl: 'https://www.fradgify.kozow.com/media/tv/Squid.Game.S01.COMPLETE.DUBBED/Squid.Game.S01E02.DUBBED.720p.NF.WEBRip.x264-GalaxyTV.mkv',
+        id: 'feat-poor-things',
+        cleanTitle: 'Poor Things',
+        year: 2023,
+        imdbRating: '7.9',
+        quality: '1080p WEBRip',
+        audioTag: 'Dolby 5.1',
+        genres: ['Comedy', 'Drama', 'Romance'],
+        plot: 'The incredible tale of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.',
+        backdropUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 21m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Poor%20Things%20(2023)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Poor.Things.2023.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
       },
       {
-        id: 'feat-yumis-cells',
-        cleanTitle: "Yumi's Cells",
+        id: 'feat-eeaao',
+        cleanTitle: 'Everything Everywhere All At Once',
+        year: 2022,
+        imdbRating: '7.8',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby Atmos',
+        genres: ['Action', 'Adventure', 'Comedy', 'Sci-Fi'],
+        plot: 'A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes.',
+        backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 19m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Everything%20Everywhere%20All%20At%20Once%20(2022)%20%5b720p%5d%20%5bBluRay%5d%20%5bYTS.MX%5d/Everything.Everywhere.All.At.Once.2022.720p.BluRay.x264.AAC-%5bYTS.MX%5d.mp4',
+      },
+      {
+        id: 'feat-coda',
+        cleanTitle: 'CODA',
         year: 2021,
-        imdbRating: '8.4',
+        imdbRating: '8.0',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Comedy', 'Drama', 'Music'],
+        plot: 'As a child of deaf adults, Ruby is torn between pursuing her passion at Berklee College of Music and helping her family maintain their fishing business.',
+        backdropUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 51m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/CODA%20(2021)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/CODA.2021.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+      },
+      {
+        id: 'feat-asteroid-city',
+        cleanTitle: 'Asteroid City',
+        year: 2023,
+        imdbRating: '6.5',
+        quality: '1080p WEBRip',
+        audioTag: 'Dolby 5.1',
+        genres: ['Comedy', 'Drama', 'Romance'],
+        plot: 'World-changing events spectacularly disrupt the itinerary of a Junior Stargazer/Space Cadet convention in an American desert town circa 1955.',
+        backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 45m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Asteroid%20City%20(2023)%20%5b1080p%5d%20%5bWEBRip%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Asteroid.City.2023.1080p.WEBRip.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+      },
+    ],
+  },
+  {
+    name: 'Action, Comedy & Cult Classics',
+    tag: 'Audience Favorites',
+    movies: [
+      {
+        id: 'feat-21-jump-street',
+        cleanTitle: '21 Jump Street',
+        year: 2012,
+        imdbRating: '7.2',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Action', 'Comedy', 'Crime'],
+        plot: 'A pair of underachieving cops are sent back to a local high school to blend in and bring down a synthetic drug ring.',
+        backdropUrl: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 49m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/21%20Jump%20Street%20(2012)%20%5b1080p%5d/21.Jump.Street.2012.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-22-jump-street',
+        cleanTitle: '22 Jump Street',
+        year: 2014,
+        imdbRating: '7.0',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Action', 'Comedy', 'Crime'],
+        plot: 'After making their way through high school twice, big changes are in store for officers Schmidt and Jenko when they go deep undercover at a local college.',
+        backdropUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 52m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/22%20Jump%20Street%20(2014)%20%5b1080p%5d/22.Jump.Street.2014.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-breakfast-club',
+        cleanTitle: 'The Breakfast Club',
+        year: 1985,
+        imdbRating: '7.8',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Comedy', 'Drama'],
+        plot: 'Five high school students meet in Saturday detention and discover how they have a lot more in common than they thought.',
+        backdropUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 37m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Breakfast%20Club%20(1985)%20%5b1080p%5d/The.Breakfast.Club.1985.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-boyhood',
+        cleanTitle: 'Boyhood',
+        year: 2014,
+        imdbRating: '7.9',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama'],
+        plot: 'The life of Mason, from early childhood to his arrival at college, filmed over 12 years with the same cast.',
+        backdropUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=300&auto=format&fit=crop&q=80',
+        runtime: '2h 45m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Boyhood%20(2014)%20%5b1080p%5d/Boyhood.2014.1080p.BluRay.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-wallflower',
+        cleanTitle: 'The Perks of Being a Wallflower',
+        year: 2012,
+        imdbRating: '7.9',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama', 'Romance'],
+        plot: 'An introvert freshman is taken under the wings of two seniors who welcome him to the real world.',
+        backdropUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 43m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Perks%20of%20Being%20a%20Wallflower%20(2012)%20%5b1080p%5d/The.Perks.of.Being.a.Wallflower.2012.1080p.BRrip.x264.GAZ.YIFY.mp4',
+      },
+    ],
+  },
+  {
+    name: 'Animated Wonders & Family Favorites',
+    tag: 'Animation Classics',
+    movies: [
+      {
+        id: 'feat-fantastic-mr-fox',
+        cleanTitle: 'Fantastic Mr. Fox',
+        year: 2009,
+        imdbRating: '7.9',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Animation', 'Adventure', 'Comedy'],
+        plot: "An urbane fox cannot resist returning to his farm raiding ways and then must help his community survive the farmers' retaliation.",
+        backdropUrl: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 27m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Fantastic%20Mr%20Fox%20(2009)%20%5b1080p%5d/Fantastic.Mr.Fox.2009.1080p.BrRip.x264.YIFY.mp4',
+      },
+      {
+        id: 'feat-surfs-up',
+        cleanTitle: "Surf's Up",
+        year: 2007,
+        imdbRating: '6.7',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Animation', 'Comedy', 'Family', 'Sports'],
+        plot: 'A behind-the-scenes look at the annual Penguin World Surfing Championship and its newest participant, up-and-comer Cody Maverick.',
+        backdropUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 25m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Surfs%20Up%20(2007)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/Surfs.Up.2007.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+      },
+      {
+        id: 'feat-before-sunrise',
+        cleanTitle: 'Before Sunrise',
+        year: 1995,
+        imdbRating: '8.1',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama', 'Romance'],
+        plot: 'A young man and woman meet on a train in Europe, and wind up spending one evening together in Vienna.',
+        backdropUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 41m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/Before%20Sunrise%20(1995)%20%5bBluRay%5d%20%5b1080p%5d%20%5bYTS.AM%5d/Before.Sunrise.1995.1080p.BluRay.x264-%5bYTS.AM%5d.mp4',
+      },
+      {
+        id: 'feat-wallis-island',
+        cleanTitle: 'The Ballad Of Wallis Island',
+        year: 2025,
+        imdbRating: '7.8',
+        quality: '1080p BluRay',
+        audioTag: 'Dolby 5.1',
+        genres: ['Drama', 'Adventure', 'Mystery'],
+        plot: 'A secluded island community faces sudden transformation when long-buried secrets surface during an unexpected ocean expedition.',
+        backdropUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 55m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Ballad%20Of%20Wallis%20Island%20(2025)%20%5b1080p%5d%20%5bBluRay%5d%20%5b5.1%5d%20%5bYTS.MX%5d/The.Ballad.Of.Wallis.Island.2025.1080p.BluRay.x264.AAC5.1-%5bYTS.MX%5d.mp4',
+      },
+      {
+        id: 'feat-magic-faraway-tree',
+        cleanTitle: 'The Magic Faraway Tree',
+        year: 2026,
+        imdbRating: '8.2',
         quality: '1080p WEB-DL',
-        audioTag: 'Multi Audio',
-        genres: ['Comedy', 'Romance', 'Animation'],
-        plot: 'A psychological romance story told through the perspective of the protagonist\'s brain cells in her head controlling her thoughts, feelings and actions.',
-        backdropUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1600&auto=format&fit=crop&q=80',
-        thumbUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&auto=format&fit=crop&q=80',
-        runtime: '28 Episodes',
-        streamUrl: 'https://www.fradgify.kozow.com/media/tv/Silicon.Valley.S01.1080p/Silicon.Valley.S01E01.Minimum.Viable.Product.1080p.BluRay.x265.10bit.AAC.5.1-ImE%5bUTR%5d.mkv',
+        audioTag: 'Dolby 5.1',
+        genres: ['Animation', 'Adventure', 'Family', 'Fantasy'],
+        plot: 'A modern family relocates to the remote English countryside, where their children discover a magical tree inhabited by extraordinary creatures.',
+        backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=80',
+        thumbUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=80',
+        runtime: '1h 48m',
+        streamUrl: 'https://www.fradgify.kozow.com/media/movies/The%20Magic%20Faraway%20Tree%20(2026)%20%5b1080p%5d%20%5bWEBRip%5d%20%5bYTS.BZ%5d/The.Magic.Faraway.Tree.2026.1080p.WEBRip.x264.AAC-%5bYTS.BZ%5d.mp4',
       },
     ],
   },
@@ -699,57 +699,63 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
     return merged.slice(0, 24);
   }, [items]);
 
-  // 3. Bollywood (Hindi Movies)
+  // 3. Hit Comedies & Classic Cinema
+  const comedyClassics = useMemo(() => {
+    return items.filter((i) => {
+      if (i.mediaKind === 'series' || i.mediaKind === 'episode') return false;
+      const g = (i.genres || []).map((x) => x.toLowerCase());
+      const t = i.cleanTitle.toLowerCase();
+      return (
+        g.includes('comedy') ||
+        g.includes('romance') ||
+        t.includes('jump street') ||
+        t.includes('breakfast club') ||
+        t.includes('truman') ||
+        t.includes('wallflower') ||
+        t.includes('boyhood') ||
+        t.includes('before sunrise') ||
+        t.includes('coda')
+      );
+    }).slice(0, 24);
+  }, [items]);
+
+  // 4. Bollywood (Hindi Movies) - From connected active BDIX/Hindi sources
   const bollywoodMovies = useMemo(() => {
-    const list = items.filter((i) => {
+    return items.filter((i) => {
       if (i.mediaKind === 'series' || i.mediaKind === 'episode') return false;
       const url = (i.url || '').toLowerCase();
       const src = (i.sourceServerName || '').toLowerCase();
       const raw = (i.rawName || '').toLowerCase();
       return (
         (url.includes('hindi movies') || src.includes('hindi movies') || raw.includes('bollywood')) &&
+        !url.includes('fradgify.kozow.com') &&
         !url.includes('south indian') &&
         !url.includes('hindi dubbed')
       );
-    });
-
-    const merged = [...list];
-    for (const b of SEED_BOLLYWOOD_CATALOG) {
-      if (!merged.some((m) => m.cleanTitle.toLowerCase() === b.cleanTitle.toLowerCase())) {
-        merged.push(b);
-      }
-    }
-    return merged.slice(0, 24);
+    }).slice(0, 24);
   }, [items]);
 
-  // 4. South Indian (Hindi Dubbed)
+  // 5. South Indian (Hindi Dubbed) - From connected active BDIX sources
   const southMovies = useMemo(() => {
-    const list = items.filter((i) => {
+    return items.filter((i) => {
       if (i.mediaKind === 'series' || i.mediaKind === 'episode') return false;
       const url = (i.url || '').toLowerCase();
       const src = (i.sourceServerName || '').toLowerCase();
       const raw = (i.rawName || '').toLowerCase();
       return (
-        url.includes('south indian') ||
-        url.includes('hindi dubbed') ||
-        src.includes('south') ||
-        src.includes('dubbed') ||
-        raw.includes('south') ||
-        raw.includes('tamil') ||
-        raw.includes('telugu')
+        (url.includes('south indian') ||
+          url.includes('hindi dubbed') ||
+          src.includes('south') ||
+          src.includes('dubbed') ||
+          raw.includes('south') ||
+          raw.includes('tamil') ||
+          raw.includes('telugu')) &&
+        !url.includes('fradgify.kozow.com')
       );
-    });
-
-    const merged = [...list];
-    for (const s of SEED_SOUTH_CATALOG) {
-      if (!merged.some((m) => m.cleanTitle.toLowerCase() === s.cleanTitle.toLowerCase())) {
-        merged.push(s);
-      }
-    }
-    return merged.slice(0, 24);
+    }).slice(0, 24);
   }, [items]);
 
-  // 5. Korean TV & Web Series
+  // 6. Korean TV & Web Series
   const koreanSeries = useMemo(() => {
     const list = items.filter((i) => {
       const url = (i.url || '').toLowerCase();
@@ -770,29 +776,22 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
     return merged.slice(0, 24);
   }, [items]);
 
-  // 6. Kolkata & Bangla Movies
+  // 7. Kolkata & Bangla Cinema - From connected active BDIX/Bangla sources
   const banglaMovies = useMemo(() => {
-    const list = items.filter((i) => {
+    return items.filter((i) => {
       if (i.mediaKind === 'series' || i.mediaKind === 'episode') return false;
       const url = (i.url || '').toLowerCase();
       const src = (i.sourceServerName || '').toLowerCase();
       const raw = (i.rawName || '').toLowerCase();
       return (
-        url.includes('bangla') ||
-        url.includes('kolkata') ||
-        src.includes('bangla') ||
-        src.includes('kolkata') ||
-        raw.includes('bangla')
+        (url.includes('bangla') ||
+          url.includes('kolkata') ||
+          src.includes('bangla') ||
+          src.includes('kolkata') ||
+          raw.includes('bangla')) &&
+        !url.includes('fradgify.kozow.com')
       );
-    });
-
-    const merged = [...list];
-    for (const b of SEED_BANGLA_CATALOG) {
-      if (!merged.some((m) => m.cleanTitle.toLowerCase() === b.cleanTitle.toLowerCase())) {
-        merged.push(b);
-      }
-    }
-    return merged.slice(0, 24);
+    }).slice(0, 24);
   }, [items]);
 
   // 7. Animation & Anime Movies
@@ -1040,12 +1039,12 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
           />
         )}
 
-        {/* ROW 2: HOLLYWOOD (ENGLISH MOVIES) */}
+        {/* ROW 2: ALL-TIME BLOCKBUSTERS & OSCAR WINNERS */}
         {hollywoodMovies.length > 0 && (
           <CinemaCategoryRow
-            title="Hollywood (English Movies)"
+            title="All-Time Blockbusters & Oscar Winners"
             icon={<Clapperboard className="w-5 h-5 text-blue-400" />}
-            countBadge="English Cinema"
+            countBadge="Blockbuster Cinema"
             items={hollywoodMovies}
             watchlistSet={watchlistSet}
             onSelectMedia={onSelectMedia}
@@ -1056,13 +1055,29 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
           />
         )}
 
-        {/* ROW 3: BOLLYWOOD (HINDI MOVIES) */}
-        {bollywoodMovies.length > 0 && (
+        {/* ROW 3: ACTION, SCI-FI & SURVIVAL THRILLERS */}
+        {actionMovies.length > 0 && (
           <CinemaCategoryRow
-            title="Bollywood (Hindi Movies)"
-            icon={<Film className="w-5 h-5 text-rose-400" />}
-            countBadge="Hindi Hits"
-            items={bollywoodMovies}
+            title="Action, Sci-Fi & Survival Thrillers"
+            icon={<Flame className="w-5 h-5 text-orange-400" />}
+            countBadge="Action & Sci-Fi"
+            items={actionMovies}
+            watchlistSet={watchlistSet}
+            onSelectMedia={onSelectMedia}
+            onPlayDirect={onPlayDirect}
+            onToggleWatchlist={onToggleWatchlist}
+            onOpenFolder={onOpenFolder}
+            onExploreAll={() => onNavigateSection && onNavigateSection('movies')}
+          />
+        )}
+
+        {/* ROW 4: HIT COMEDIES & CLASSIC CINEMA */}
+        {comedyClassics.length > 0 && (
+          <CinemaCategoryRow
+            title="Hit Comedies & Classic Cinema"
+            icon={<Smile className="w-5 h-5 text-amber-400" />}
+            countBadge="Comedy & Classics"
+            items={comedyClassics}
             watchlistSet={watchlistSet}
             onSelectMedia={onSelectMedia}
             onPlayDirect={onPlayDirect}
@@ -1071,56 +1086,10 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
           />
         )}
 
-        {/* ROW 4: SOUTH INDIAN MOVIES (HINDI DUBBED) */}
-        {southMovies.length > 0 && (
-          <CinemaCategoryRow
-            title="South Indian Cinema (Hindi Dubbed)"
-            icon={<Zap className="w-5 h-5 text-amber-400 fill-amber-400/20" />}
-            countBadge="Dual Audio & Dubbed"
-            items={southMovies}
-            watchlistSet={watchlistSet}
-            onSelectMedia={onSelectMedia}
-            onPlayDirect={onPlayDirect}
-            onToggleWatchlist={onToggleWatchlist}
-            onOpenFolder={onOpenFolder}
-          />
-        )}
-
-        {/* ROW 5: KOREAN TV & K-DRAMA SERIES */}
-        {koreanSeries.length > 0 && (
-          <CinemaCategoryRow
-            title="Korean TV & K-Drama Series"
-            icon={<Tv className="w-5 h-5 text-cyan-400" />}
-            countBadge="Asian Drama"
-            items={koreanSeries}
-            watchlistSet={watchlistSet}
-            onSelectMedia={onSelectMedia}
-            onPlayDirect={onPlayDirect}
-            onToggleWatchlist={onToggleWatchlist}
-            onOpenFolder={onOpenFolder}
-            onExploreAll={() => onNavigateSection && onNavigateSection('series')}
-          />
-        )}
-
-        {/* ROW 6: KOLKATA & BANGLA CINEMA */}
-        {banglaMovies.length > 0 && (
-          <CinemaCategoryRow
-            title="Kolkata & Bangla Cinema"
-            icon={<Film className="w-5 h-5 text-emerald-400" />}
-            countBadge="Bangla Movies"
-            items={banglaMovies}
-            watchlistSet={watchlistSet}
-            onSelectMedia={onSelectMedia}
-            onPlayDirect={onPlayDirect}
-            onToggleWatchlist={onToggleWatchlist}
-            onOpenFolder={onOpenFolder}
-          />
-        )}
-
-        {/* ROW 7: ANIMATION & ANIME MOVIES */}
+        {/* ROW 5: ANIMATION & FAMILY ADVENTURES */}
         {animationMovies.length > 0 && (
           <CinemaCategoryRow
-            title="Animation & Anime Movies"
+            title="Animation & Family Adventures"
             icon={<Smile className="w-5 h-5 text-purple-400" />}
             countBadge="Animated Features"
             items={animationMovies}
@@ -1132,22 +1101,7 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
           />
         )}
 
-        {/* ROW 8: FOREIGN LANGUAGE CINEMA */}
-        {foreignMovies.length > 0 && (
-          <CinemaCategoryRow
-            title="Foreign Language Cinema"
-            icon={<Globe className="w-5 h-5 text-indigo-400" />}
-            countBadge="World Cinema"
-            items={foreignMovies}
-            watchlistSet={watchlistSet}
-            onSelectMedia={onSelectMedia}
-            onPlayDirect={onPlayDirect}
-            onToggleWatchlist={onToggleWatchlist}
-            onOpenFolder={onOpenFolder}
-          />
-        )}
-
-        {/* ROW 9: ALL TV SHOWS & COMPLETE SERIES */}
+        {/* ROW 6: TV SHOWS & COMPLETE WEB SERIES */}
         {allSeries.length > 0 && (
           <CinemaCategoryRow
             title="TV Shows & Complete Web Series"
@@ -1163,13 +1117,58 @@ export const NetflixHome: React.FC<CinemaHomeProps> = ({
           />
         )}
 
-        {/* ROW 10: ACTION & HIGH-OCTANE THRILLERS */}
-        {actionMovies.length > 0 && (
+        {/* ROW 7: KOLKATA & BANGLA CINEMA (Appears when active Bangla servers are connected) */}
+        {banglaMovies.length > 0 && (
           <CinemaCategoryRow
-            title="Action & High-Octane Thrillers"
-            icon={<Flame className="w-5 h-5 text-orange-400" />}
-            countBadge="Action Movies"
-            items={actionMovies}
+            title="Kolkata & Bangla Cinema"
+            icon={<Film className="w-5 h-5 text-emerald-400" />}
+            countBadge="Bangla Movies"
+            items={banglaMovies}
+            watchlistSet={watchlistSet}
+            onSelectMedia={onSelectMedia}
+            onPlayDirect={onPlayDirect}
+            onToggleWatchlist={onToggleWatchlist}
+            onOpenFolder={onOpenFolder}
+          />
+        )}
+
+        {/* ROW 8: BOLLYWOOD (HINDI MOVIES) (Appears when active Hindi servers are connected) */}
+        {bollywoodMovies.length > 0 && (
+          <CinemaCategoryRow
+            title="Bollywood (Hindi Movies)"
+            icon={<Film className="w-5 h-5 text-rose-400" />}
+            countBadge="Hindi Hits"
+            items={bollywoodMovies}
+            watchlistSet={watchlistSet}
+            onSelectMedia={onSelectMedia}
+            onPlayDirect={onPlayDirect}
+            onToggleWatchlist={onToggleWatchlist}
+            onOpenFolder={onOpenFolder}
+          />
+        )}
+
+        {/* ROW 9: SOUTH INDIAN CINEMA (HINDI DUBBED) (Appears when active South servers are connected) */}
+        {southMovies.length > 0 && (
+          <CinemaCategoryRow
+            title="South Indian Cinema (Hindi Dubbed)"
+            icon={<Zap className="w-5 h-5 text-amber-400 fill-amber-400/20" />}
+            countBadge="Dual Audio & Dubbed"
+            items={southMovies}
+            watchlistSet={watchlistSet}
+            onSelectMedia={onSelectMedia}
+            onPlayDirect={onPlayDirect}
+            onToggleWatchlist={onToggleWatchlist}
+            onOpenFolder={onOpenFolder}
+          />
+        )}
+
+        {/* ROW 10: FOREIGN LANGUAGE CINEMA */}
+        {foreignMovies.length > 0 && (
+          <CinemaCategoryRow
+            title="Foreign Language Cinema"
+            icon={<Globe className="w-5 h-5 text-indigo-400" />}
+            countBadge="World Cinema"
+            items={foreignMovies}
             watchlistSet={watchlistSet}
             onSelectMedia={onSelectMedia}
             onPlayDirect={onPlayDirect}
