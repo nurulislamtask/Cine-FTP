@@ -1019,7 +1019,7 @@ export function resolvePublicBdixGatewayUrl(rawUrl: string): string | null {
       return 'https://server7.ftpbd.net/FTP-7/WWE%20Wrestling/';
     }
 
-    return 'https://server2.ftpbd.net/FTP-2/English%20Movies/';
+    return null;
   } catch {
     return null;
   }

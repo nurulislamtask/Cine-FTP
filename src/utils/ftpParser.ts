@@ -1015,7 +1015,7 @@ export function resolvePublicBdixGatewayUrl(rawUrl: string): string | null {
       return 'https://server5.ftpbd.net/FTP-5/Animation%20Movies/';
     }
 
-    return 'https://server2.ftpbd.net/FTP-2/English%20Movies/';
+    return null;
   } catch {
     return null;
   }

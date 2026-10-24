@@ -92,6 +92,8 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hideControlsTimer = useRef<number | null>(null);
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const isTouchDevice = useRef(false);
   const appliedInitialStartRef = useRef<string | null>(null);
 
   // Playback state
@@ -213,8 +215,35 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
   const [isResolvingFolder, setIsResolvingFolder] = useState(false);
   const [folderResolutionError, setFolderResolutionError] = useState<string | null>(null);
 
+  // Reset all playback and override states cleanly when a new video is loaded
+  useEffect(() => {
+    setOverrideVideoUrl(null);
+    setStreamFallbackStep(0);
+    fallbackAttemptsRef.current = 0;
+    const startAt = initialStartTime || 0;
+    setCurrentTime(startAt);
+    setScrubTime(startAt);
+    setDuration(0);
+    setProbedDuration(0);
+    setBufferedEnd(0);
+    setIsBuffering(true);
+    setStreamLoadFailed(false);
+    setSelectedAudioTrack(0);
+    setProbedAudioTracks([]);
+    setProbedSubTracks([]);
+    appliedInitialStartRef.current = null;
+    setShowControls(true);
+  }, [video.id, video.url]);
+
   // Auto-resolve playable file with instant persistent cache lookup
   useEffect(() => {
+    const isDirectVideo = /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(video.url);
+    if (isDirectVideo) {
+      setOverrideVideoUrl(null);
+      setIsResolvingFolder(false);
+      return;
+    }
+
     const cached = getCachedPlayableUrl(video.id) || getCachedPlayableUrl(video.url);
     if (cached) {
       setOverrideVideoUrl(cached);
@@ -225,9 +254,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     const isFolder =
       video.isDirectory ||
       video.url.endsWith('/') ||
-      !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(video.url);
+      !isDirectVideo;
 
     if (!isFolder) {
+      setOverrideVideoUrl(null);
       setIsResolvingFolder(false);
       return;
     }
@@ -544,7 +574,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
   const effectiveDuration = Math.max(duration, probedDuration, runtimeSeconds, 0);
   const displayedTime = isScrubbing ? scrubTime : currentTime;
 
-  // Auto-hide controls after 3.5 seconds of inactivity while playing
+  // Auto-hide controls after 4 seconds of inactivity while playing (NEVER hide while paused)
   const scheduleAutoHide = useCallback(() => {
     if (hideControlsTimer.current) {
       window.clearTimeout(hideControlsTimer.current);
@@ -554,7 +584,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
       if (isPlaying && !activeMenu && !isScrubbing) {
         setShowControls(false);
       }
-    }, 3500);
+    }, 4000);
   }, [isPlaying, activeMenu, isScrubbing]);
 
   useEffect(() => {
@@ -758,9 +788,81 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     probedAudioTracks[0]?.label ||
     'Audio';
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    isTouchDevice.current = true;
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!touchStartRef.current) return;
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+
+    if (e.changedTouches.length === 0) return;
+    const endTouch = e.changedTouches[0];
+    const dx = endTouch.clientX - start.x;
+    const dy = endTouch.clientY - start.y;
+    const dt = Date.now() - start.time;
+
+    // Genuine tap: less than 24px movement and under 400ms duration
+    if (Math.hypot(dx, dy) < 24 && dt < 400) {
+      if (activeMenu) {
+        setActiveMenu(null);
+        return;
+      }
+
+      // If controls are hidden on mobile, tapping ONCE reveals them immediately!
+      if (!showControls) {
+        setShowControls(true);
+        scheduleAutoHide();
+        return;
+      }
+
+      // If controls are already visible, check for double-tap on side to skip
+      const now = Date.now();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const relX = (endTouch.clientX - rect.left) / rect.width;
+      const doubleTapDelta = now - lastTapRef.current.time;
+
+      if (doubleTapDelta < 320 && Math.abs(relX - lastTapRef.current.x) < 0.28) {
+        lastTapRef.current = { time: 0, x: 0 };
+        if (relX < 0.35) {
+          skipRelative(-10);
+        } else if (relX > 0.65) {
+          skipRelative(10);
+        } else {
+          togglePlay();
+        }
+        return;
+      }
+
+      lastTapRef.current = { time: now, x: relX };
+      // Single tap on background when controls are already visible toggles them off
+      setShowControls(false);
+    }
+  };
+
   const handleSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // If recently handled by touch event, ignore duplicate synthetic click
+    if (isTouchDevice.current && Date.now() - lastTapRef.current.time < 450) {
+      return;
+    }
+
     if (activeMenu) {
       setActiveMenu(null);
+      return;
+    }
+
+    // If controls are hidden, clicking reveals them immediately
+    if (!showControls) {
+      setShowControls(true);
+      scheduleAutoHide();
       return;
     }
 
@@ -769,7 +871,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     const relX = (e.clientX - rect.left) / rect.width;
     const delta = now - lastTapRef.current.time;
 
-    // Double tap to skip 10s left or right
+    // Double click to skip 10s left or right
     if (delta < 280 && Math.abs(relX - lastTapRef.current.x) < 0.25) {
       lastTapRef.current = { time: 0, x: 0 };
       if (relX < 0.35) {
@@ -783,11 +885,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
     }
 
     lastTapRef.current = { time: now, x: relX };
-    setShowControls((prev) => {
-      const next = !prev;
-      if (next) scheduleAutoHide();
-      return next;
-    });
+    setShowControls(false);
   };
 
   return (
@@ -818,8 +916,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
 
       {/* Main Video Surface */}
       <div
-        className="relative flex-1 w-full h-full flex items-center justify-center bg-black cursor-pointer"
+        className="relative flex-1 w-full h-full flex items-center justify-center bg-black cursor-pointer select-none"
         onClick={handleSurfaceClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         <video
           ref={videoRef}
@@ -837,7 +937,10 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           onPlaying={() => setIsBuffering(false)}
           onLoadedData={() => setIsBuffering(false)}
           onCanPlayThrough={() => setIsBuffering(false)}
-          onPause={() => setIsPlaying(false)}
+          onPause={() => {
+            setIsPlaying(false);
+            setShowControls(true);
+          }}
           onWaiting={() => {
             const v = videoRef.current;
             if (v && v.buffered && v.buffered.length > 0) {
@@ -854,9 +957,15 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
             if (videoRef.current) {
               videoRef.current.playbackRate = playbackSpeed;
               videoRef.current.volume = volume;
-              if (currentTime > 2 && Math.abs(videoRef.current.currentTime - currentTime) > 3) {
+              // Only seek to initialStartTime if explicitly requested for this video
+              if (
+                initialStartTime > 0 &&
+                appliedInitialStartRef.current !== video.id &&
+                Math.abs(videoRef.current.currentTime - initialStartTime) > 2
+              ) {
                 try {
-                  videoRef.current.currentTime = currentTime;
+                  videoRef.current.currentTime = initialStartTime;
+                  appliedInitialStartRef.current = video.id;
                 } catch {}
               }
             }
@@ -965,7 +1074,7 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
 
         {/* Clean Buffering Spinner */}
         {isBuffering && !isResolvingFolder && streamUrl && !streamLoadFailed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-20 pointer-events-auto">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-20 pointer-events-none">
             <div className="w-12 h-12 border-3 border-[#E5A00D] border-t-transparent rounded-full animate-spin shadow-lg" />
             <div className="flex flex-col items-center gap-2">
               <span className="text-xs font-semibold text-white/90 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 select-none shadow">
@@ -1071,14 +1180,60 @@ export const CinemaPlayer: React.FC<CinemaPlayerProps> = ({
           </div>
         )}
 
-        {/* Big Clean Play Button Overlay when paused */}
-        {!isPlaying && !isBuffering && !isResolvingFolder && streamUrl && !streamLoadFailed && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl transition-transform hover:scale-105">
-              <Play className="w-8 h-8 fill-white text-white translate-x-0.5" />
-            </div>
-          </div>
-        )}
+        {/* Quick Center Controls: Fast -10s, Big Play/Pause, Fast +10s (Prominent on Mobile & Desktop) */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute inset-0 flex items-center justify-center gap-6 sm:gap-10 pointer-events-none transition-opacity duration-200 z-25 ${
+            showControls && !streamLoadFailed && !isResolvingFolder
+              ? 'opacity-100'
+              : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          {/* Rewind 10s */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              skipRelative(-10);
+            }}
+            className="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white transition-all active:scale-90 cursor-pointer shadow-xl hover:scale-105"
+            title="Rewind 10s"
+          >
+            <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <span className="text-[10px] font-mono font-bold leading-none mt-0.5">-10s</span>
+          </button>
+
+          {/* Big Center Play / Pause */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlay();
+            }}
+            className="pointer-events-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#E50914] hover:bg-[#f6121d] text-white flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-2xl shadow-red-600/50 hover:scale-105"
+            title={isPlaying ? 'Pause' : 'Play'}
+          >
+            {isPlaying ? (
+              <Pause className="w-8 h-8 sm:w-10 sm:h-10 fill-white" />
+            ) : (
+              <Play className="w-8 h-8 sm:w-10 sm:h-10 fill-white ml-1" />
+            )}
+          </button>
+
+          {/* Fast Forward 10s */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              skipRelative(10);
+            }}
+            className="pointer-events-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center text-white transition-all active:scale-90 cursor-pointer shadow-xl hover:scale-105"
+            title="Forward 10s"
+          >
+            <RotateCw className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <span className="text-[10px] font-mono font-bold leading-none mt-0.5">+10s</span>
+          </button>
+        </div>
       </div>
 
       {/* Floating Toast Notification */}

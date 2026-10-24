@@ -129,7 +129,6 @@ export const MediaDetailView: React.FC<MediaDetailViewProps> = ({
         if (cached) {
           const directItem: ParsedFtpItem = {
             ...item,
-            id: cached,
             url: cached,
             isDirectory: false,
           };

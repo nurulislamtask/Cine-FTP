@@ -372,10 +372,12 @@ export function clearIndexedCache() {
   } catch {}
 }
 
-const PLAYABLE_CACHE_KEY = 'cineftp_playable_links_cache_v2';
+const PLAYABLE_CACHE_KEY = 'cineftp_playable_links_cache_v3';
 const playableLinksCache = new Map<string, string>();
 
 try {
+  // Clear obsolete v2 cache if present to remove any hijacked or corrupted stream links
+  localStorage.removeItem('cineftp_playable_links_cache_v2');
   const raw = localStorage.getItem(PLAYABLE_CACHE_KEY);
   if (raw) {
     const parsed = JSON.parse(raw);
@@ -1001,31 +1003,10 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     };
   }
 
-  // 2. Check if this movie exists in our known seed catalog with a verified direct stream URL
-  const normStr = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const targetNorm = normStr(folderItem.cleanTitle);
-  const rawNorm = normStr(folderItem.rawName);
-
-  const seedMatch = INITIAL_UNIFIED_CATALOG.find((s) => {
-    if (s.id === folderItem.id || s.url === folderItem.url) return true;
-    const sNorm = normStr(s.cleanTitle);
-    if (
-      sNorm &&
-      targetNorm &&
-      (sNorm === targetNorm ||
-        (targetNorm.length > 4 && sNorm.includes(targetNorm)) ||
-        (sNorm.length > 4 && targetNorm.includes(sNorm)))
-    ) {
-      return true;
-    }
-    if (sNorm && rawNorm && (rawNorm.includes(sNorm) || sNorm.includes(rawNorm))) {
-      return true;
-    }
-    try {
-      if (folderItem.url.includes(encodeURIComponent(s.cleanTitle))) return true;
-    } catch {}
-    return false;
-  });
+  // 2. Only match seed catalog if this item IS that exact seed item (strictly exact ID or exact URL)
+  const seedMatch = INITIAL_UNIFIED_CATALOG.find(
+    (s) => s.id === folderItem.id || s.url === folderItem.url
+  );
 
   if (seedMatch && !seedMatch.isDirectory && /\.(mp4|mkv|webm)(\?.*)?$/i.test(seedMatch.url)) {
     saveCachedPlayableUrl(folderItem.id, seedMatch.url);
@@ -1122,34 +1103,45 @@ export async function resolvePlayableFromFolder(folderItem: ParsedFtpItem): Prom
     } catch {}
   }
 
-  // If still no video found (e.g. serverless proxy network restrictions on Vercel),
-  // construct the canonical BDIX movie filename from folder name so playback NEVER bricks!
+  // If no direct video in Level 1, check non-sample subfolders (e.g., 1080p/ or release subfolder)
   if (videos.length === 0) {
-    let fallbackVideoUrl = folderItem.url;
-    if (
-      folderItem.isDirectory ||
-      folderItem.url.endsWith('/') ||
-      !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(folderItem.url)
-    ) {
-      const cleanBaseUrl = folderItem.url.replace(/\/+$/, '');
-      const folderSlug =
-        cleanBaseUrl.split('/').pop() || folderItem.cleanTitle.replace(/[\s\.\-_]+/g, '-');
-      fallbackVideoUrl = `${cleanBaseUrl}/${folderSlug}-1080p-English-DD-5-1--ESub_reencoded.mp4`;
+    const subDirs = rawItems.filter(
+      (i) => i.isDirectory && !/^(subs?|subtitles?|sample|extras?|featurettes?)$/i.test(i.rawName.trim())
+    );
+    for (const sd of subDirs.slice(0, 3)) {
+      try {
+        const nestedRes = await browseFtpDirectory(sd.url);
+        const nestedVideos = nestedRes.items.filter(
+          (i) =>
+            !i.isDirectory &&
+            (i.mediaKind === 'movie' ||
+              i.mediaKind === 'episode' ||
+              (i.extension && /^(mp4|mkv|webm|avi|mov|ts|m4v)$/i.test(i.extension)) ||
+              /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(i.url))
+        );
+        if (nestedVideos.length > 0) {
+          videos.push(...nestedVideos);
+          subtitles.push(...nestedRes.subtitles);
+          break;
+        }
+      } catch {}
     }
+  }
+
+  // If still no video file found, use the folderItem directly
+  if (videos.length === 0) {
     const fallbackItem: ParsedFtpItem = {
       ...folderItem,
-      id: fallbackVideoUrl,
-      url: fallbackVideoUrl,
+      id: folderItem.url,
+      url: folderItem.url,
       isDirectory: false,
       mediaKind: 'movie',
     };
-    saveCachedPlayableUrl(folderItem.id, fallbackVideoUrl);
-    saveCachedPlayableUrl(folderItem.url, fallbackVideoUrl);
 
     return {
       primaryVideo: fallbackItem,
       allVideos: [fallbackItem],
-      subtitles: [],
+      subtitles,
       folderResult: dirResult || {
         url: folderItem.url,
         serverName: folderItem.sourceServerName || 'CineFTP Server',

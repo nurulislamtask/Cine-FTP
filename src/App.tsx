@@ -449,8 +449,22 @@ export default function App() {
   };
 
   // Handle Play Direct from Card or Detail
-  const handlePlayDirect = async (item: ParsedFtpItem, meta?: EnrichedMetadata | null) => {
-    // If stream link was already indexed or cached, launch player immediately with zero waiting!
+  const handlePlayDirect = async (item: ParsedFtpItem, _meta?: EnrichedMetadata | null) => {
+    // 1. If it's already a direct video file, launch player immediately with 0ms delay!
+    const isDirectVideo = /\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(item.url);
+    if (isDirectVideo) {
+      const directItem: ParsedFtpItem = { ...item, isDirectory: false };
+      recordRecentlyPlayed(directItem, [directItem]);
+      setActivePlayerState({
+        video: directItem,
+        playlist: [directItem],
+        subtitles: [],
+        initialStartTime: 0,
+      });
+      return;
+    }
+
+    // 2. If stream link was cached, launch player immediately with zero waiting!
     const cachedUrl = getCachedPlayableUrl(item.id) || getCachedPlayableUrl(item.url);
     if (cachedUrl) {
       const directItem: ParsedFtpItem = { ...item, url: cachedUrl, isDirectory: false };
@@ -459,6 +473,7 @@ export default function App() {
         video: directItem,
         playlist: [directItem],
         subtitles: [],
+        initialStartTime: 0,
       });
       return;
     }
@@ -466,7 +481,7 @@ export default function App() {
     const isFolder =
       item.isDirectory ||
       item.url.endsWith('/') ||
-      !/\.(mp4|mkv|webm|avi|mov|ts|m4v)(\?.*)?$/i.test(item.url);
+      !isDirectVideo;
 
     if (isFolder) {
       setIsLoading(true);
@@ -481,6 +496,7 @@ export default function App() {
             playlist: playable.allVideos,
             subtitles: playable.subtitles,
             seasons: playable.seasons,
+            initialStartTime: 0,
           });
           return;
         }
@@ -496,6 +512,7 @@ export default function App() {
       video: item,
       playlist: [item],
       subtitles: [],
+      initialStartTime: 0,
     });
   };
 
